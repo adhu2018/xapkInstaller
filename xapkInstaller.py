@@ -78,7 +78,7 @@ if __name__ == "__main__":
         elif app.endswith(".apks"):
             print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
         else:
-            print(f"{app!r}不是`xapk`安装包！")
+            print(f"{app!r}不是`apk/xapk`安装包或者`xapk`安装包的解压路径！")
     except Exception as err:
         exc_type, exc_value, exc_obj = sys.exc_info()
         traceback.print_tb(exc_obj)
