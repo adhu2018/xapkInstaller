@@ -25,7 +25,44 @@ def read_manifest(manifest_path):
 
 def install_xapk(file_path):
     """安装xapk文件"""
-    pass
+    os.chdir(file_path)
+    manifest = read_manifest("manifest.json")
+    install = ["adb", "install-multiple"]
+    split_apks = manifest["split_apks"]
+    other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
+        "config.hi", "config.in", "config.it", "config.ja", "config.ko",
+        "config.my", "config.pt", "config.ru", "config.th", "config.tr", 
+        "config.vi"]
+    other_dpi = ["config.tvdpi"]
+    zh = v8a = v7a = xhdpi = xxhdpi = xxxhdpi = t = None
+    for i in split_apks:
+        if i["id"]=="base": base = i["file"]
+        elif i["id"]=="config.zh": zh = i["file"]
+        elif i["id"]=="config.arm64_v8a": v8a = i["file"]
+        elif i["id"]=="config.armeabi_v7a": v7a = i["file"]
+        elif i["id"]=="config.xhdpi": xhdpi = i["file"]
+        elif i["id"]=="config.xxhdpi": xxhdpi = i["file"]
+        elif i["id"]=="config.xxxhdpi": xxxhdpi = i["file"]
+        elif i["id"] in other_language: pass
+        elif i["id"] in other_dpi: pass
+        else: install.append(i["file"])
+        
+    assert base, "xapk解析过程中出现错误：manifest.json中缺少id为`base`的文件！"
+    install.append(base)
+    
+    if v7a: t = v7a
+    if v8a: t = v8a
+    if t: install.append(t)
+    
+    t = None
+    if xxxhdpi: t = xxhdpi
+    if xxhdpi: t = xxhdpi
+    if xhdpi: t = xhdpi
+    if t: install.append(t)
+    
+    if zh: install.append(zh)
+    
+    subprocess.call(install, shell=True)
 
 
 if __name__ == "__main__":
