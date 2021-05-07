@@ -73,31 +73,33 @@ def install_xapk(file_path):
     other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
         "config.hi", "config.in", "config.it", "config.ja", "config.ko",
         "config.my", "config.pt", "config.ru", "config.th", "config.tr", 
-        "config.vi"]
-    other_dpi = ["config.tvdpi"]
+        "config.vi", "config.zh"]
     other = ["extra_icu", "feedv2", "vr"]  # Google Chrome
     
-    v8a = v7a = xhdpi = xxhdpi = xxxhdpi = t = None
+    config = {}
     for i in split_apks:
-        if i["id"]=="config.arm64_v8a": v8a = i["file"]
-        elif i["id"]=="config.armeabi_v7a": v7a = i["file"]
-        elif i["id"]=="config.xhdpi": xhdpi = i["file"]
-        elif i["id"]=="config.xxhdpi": xxhdpi = i["file"]
-        elif i["id"]=="config.xxxhdpi": xxxhdpi = i["file"]
+        if i["id"]==f"config.{Device().abi.replace('-', '_')}": config["abi"] = i["file"]
+        elif i["id"]==f"config.{Device().locale.split('-')[0]}": config["locale"] = i["file"]
+        elif i["id"]=="config.arm64_v8a": config["arm64-v8a"] = i["file"]
+        elif i["id"]=="config.armeabi_v7a": config["armeabi-v7a"] = i["file"]
+        elif i["id"]=="config.xhdpi": config["xhdpi"] = i["file"]
+        elif i["id"]=="config.xxhdpi": config["xxhdpi"] = i["file"]
+        elif i["id"]=="config.xxxhdpi": config["xxxhdpi"] = i["file"]
+        elif i["id"]=="config.tvdpi": config["tvdpi"] = i["file"]
         elif i["id"] in other_language: pass
-        elif i["id"] in other_dpi: pass
         elif i["id"] in other: pass
         else: install.append(i["file"])
     
-    if v7a: t = v7a
-    if v8a: t = v8a
-    if t: install.append(t)
-    
-    t = None
-    if xxxhdpi: t = xxhdpi
-    if xxhdpi: t = xxhdpi
-    if xhdpi: t = xhdpi
-    if t: install.append(t)
+    if not config.get("abi"):
+        for i in Device().abilist:
+            if config.get(i):
+                install.append(config[i])
+                break
+    for i in ["xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
+        if config.get(i):
+            install.append(config[i])
+            break
+    if config.get("locale"): install.append(config["locale"])
     
     print(install)
     return install, subprocess.call(install, shell=True)
