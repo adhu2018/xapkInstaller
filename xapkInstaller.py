@@ -23,7 +23,7 @@ def uninstall_xapk(file_path):
 def install_apk(file_path):
     """安装apk文件"""
     print(install)
-    return subprocess.call(["adb", "install", "-r", file_path], shell=True)
+    return subprocess.call(["adb", "install", "-rtd", file_path], shell=True)
     
 def read_manifest(manifest_path):
     with open(manifest_path, "r", encoding="utf8") as f:
@@ -34,7 +34,7 @@ def install_xapk(file_path):
     """安装xapk文件"""
     os.chdir(file_path)
     split_apks = read_manifest("manifest.json")["split_apks"]
-    install = ["adb", "install-multiple"]
+    install = ["adb", "install-multiple", "-rtd"]
     other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
         "config.hi", "config.in", "config.it", "config.ja", "config.ko",
         "config.my", "config.pt", "config.ru", "config.th", "config.tr", 
