@@ -7,6 +7,9 @@ import traceback
 
 
 class Device:
+    def __init__(self):
+        self._sdk = None
+    
     @property
     def abi(self):
         return os.popen("adb shell getprop ro.product.cpu.abi").read().strip()
@@ -21,14 +24,19 @@ class Device:
     
     @property
     def sdk(self):
-        _sdk = os.popen("adb shell getprop ro.build.version.sdk").read().strip()
-        if not _sdk:
-            _sdk = os.popen("adb shell getprop ro.product.build.version.sdk").read().strip()
-        if not _sdk:
-            _sdk = os.popen("adb shell getprop ro.system.build.version.sdk").read().strip()
-        if not _sdk:
-            _sdk = os.popen("adb shell getprop ro.system_ext.build.version.sdk").read().strip()
-        return int(_sdk)
+        if not self._sdk: self.getsdk()
+        return self._sdk
+    
+    def getsdk(self):
+        self._sdk = os.popen("adb shell getprop ro.build.version.sdk").read().strip()
+        if not self._sdk:
+            self._sdk = os.popen("adb shell getprop ro.product.build.version.sdk").read().strip()
+        if not self._sdk:
+            self._sdk = os.popen("adb shell getprop ro.system.build.version.sdk").read().strip()
+        if not self._sdk:
+            self._sdk = os.popen("adb shell getprop ro.system_ext.build.version.sdk").read().strip()
+        self._sdk = int(self._sdk)
+        return self._sdk
 
 
 def unpack(file_path):
@@ -61,11 +69,12 @@ def install_xapk(file_path):
     manifest = read_manifest("manifest.json")
     split_apks = manifest["split_apks"]
     
-    if Device().sdk < int(manifest["min_sdk_version"]):
+    device = Device()
+    if device.sdk < int(manifest["min_sdk_version"]):
         print("安卓版本过低！")
         return None, 0
     
-    if Device().sdk > int(manifest["target_sdk_version"]):
+    if device.sdk > int(manifest["target_sdk_version"]):
         print("安卓版本过高！")
         return None, 0
     
@@ -78,8 +87,8 @@ def install_xapk(file_path):
     
     config = {}
     for i in split_apks:
-        if i["id"]==f"config.{Device().abi.replace('-', '_')}": config["abi"] = i["file"]
-        elif i["id"]==f"config.{Device().locale.split('-')[0]}": config["locale"] = i["file"]
+        if i["id"]==f"config.{device.abi.replace('-', '_')}": config["abi"] = i["file"]
+        elif i["id"]==f"config.{device.locale.split('-')[0]}": config["locale"] = i["file"]
         elif i["id"]=="config.arm64_v8a": config["arm64-v8a"] = i["file"]
         elif i["id"]=="config.armeabi_v7a": config["armeabi-v7a"] = i["file"]
         elif i["id"]=="config.xhdpi": config["xhdpi"] = i["file"]
@@ -91,7 +100,7 @@ def install_xapk(file_path):
         else: install.append(i["file"])
     
     if not config.get("abi"):
-        for i in Device().abilist:
+        for i in device.abilist:
             if config.get(i):
                 install.append(config[i])
                 break
