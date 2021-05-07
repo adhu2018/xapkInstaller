@@ -100,7 +100,7 @@ def install_xapk(file_path):
     if t: install.append(t)
     
     print(install)
-    return subprocess.call(install, shell=True)
+    return install, subprocess.call(install, shell=True)
 
 
 if __name__ == "__main__":
@@ -112,10 +112,12 @@ if __name__ == "__main__":
             unzip_path = unpack(app)
             install_xapk(unzip_path)
         elif os.path.isdir(app):
-            if install_xapk(app):
+            install, status = install_xapk(app)
+            if status:
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
                     uninstall_xapk(app)
-                    install_xapk(app)
+                    print(install)
+                    subprocess.call(install, shell=True)
                 else:
                     print("安装已取消！")
         elif app.endswith(".apks"):
