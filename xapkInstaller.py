@@ -6,6 +6,31 @@ import sys
 import traceback
 
 
+class Device:
+    @property
+    def abi(self):
+        return os.popen("adb shell getprop ro.product.cpu.abi").read().strip()
+    
+    @property
+    def abilist(self):
+        return os.popen("adb shell getprop ro.product.cpu.abilist").read().strip()
+    
+    @property
+    def locale(self):
+        return os.popen("adb shell getprop ro.product.locale").read().strip()
+    
+    @property
+    def sdk(self):
+        _sdk = os.popen("adb shell getprop ro.build.version.sdk").read().strip()
+        if not _sdk:
+            _sdk = os.popen("adb shell getprop ro.product.build.version.sdk").read().strip()
+        if not _sdk:
+            _sdk = os.popen("adb shell getprop ro.system.build.version.sdk").read().strip()
+        if not _sdk:
+            _sdk = os.popen("adb shell getprop ro.system_ext.build.version.sdk").read().strip()
+        return int(_sdk)
+
+
 def unpack(file_path):
     """解压xapk文件"""
     (dir_path, name_suffix) = os.path.split(file_path)
