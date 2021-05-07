@@ -14,8 +14,15 @@ def unpack(file_path):
     shutil.unpack_archive(file_path, unpack_path, "zip")
     return unpack_path
 
+def uninstall_xapk(file_path):
+    package_name = read_manifest("manifest.json")["package_name"]
+    uninstall = ["adb", "uninstall", package_name]
+    print(uninstall)
+    return subprocess.call(uninstall, shell=True)
+
 def install_apk(file_path):
     """安装apk文件"""
+    print(install)
     return subprocess.call(["adb", "install", "-r", file_path], shell=True)
     
 def read_manifest(manifest_path):
@@ -37,9 +44,7 @@ def install_xapk(file_path):
     
     v8a = v7a = xhdpi = xxhdpi = xxxhdpi = t = None
     for i in split_apks:
-        if i["id"]=="base": install.append(i["file"])
-        elif i["id"]=="config.zh": install.append(i["file"])
-        elif i["id"]=="config.arm64_v8a": v8a = i["file"]
+        if i["id"]=="config.arm64_v8a": v8a = i["file"]
         elif i["id"]=="config.armeabi_v7a": v7a = i["file"]
         elif i["id"]=="config.xhdpi": xhdpi = i["file"]
         elif i["id"]=="config.xxhdpi": xxhdpi = i["file"]
@@ -72,7 +77,12 @@ if __name__ == "__main__":
             unzip_path = unpack(app)
             install_xapk(unzip_path)
         elif os.path.isdir(app):
-            install_xapk(app)
+            if install_xapk(app):
+                if input("安装失败！将尝试卸载后再安装，是否继续？(yes/no)").lower()=="yes":
+                    uninstall_xapk(app)
+                    install_xapk(app)
+                else:
+                    print("安装已取消！")
         elif app.endswith(".apks"):
             print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
         else:
