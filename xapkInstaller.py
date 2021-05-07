@@ -16,7 +16,7 @@ def unpack(file_path):
 
 def install_apk(file_path):
     """安装apk文件"""
-    subprocess.call(["adb", "install", "-r", file_path], shell=True)
+    return subprocess.call(["adb", "install", "-r", file_path], shell=True)
     
 def read_manifest(manifest_path):
     with open(manifest_path, "r", encoding="utf8") as f:
@@ -26,18 +26,19 @@ def read_manifest(manifest_path):
 def install_xapk(file_path):
     """安装xapk文件"""
     os.chdir(file_path)
-    manifest = read_manifest("manifest.json")
+    split_apks = read_manifest("manifest.json")["split_apks"]
     install = ["adb", "install-multiple"]
-    split_apks = manifest["split_apks"]
     other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
         "config.hi", "config.in", "config.it", "config.ja", "config.ko",
         "config.my", "config.pt", "config.ru", "config.th", "config.tr", 
         "config.vi"]
     other_dpi = ["config.tvdpi"]
-    zh = v8a = v7a = xhdpi = xxhdpi = xxxhdpi = t = None
+    other = ["extra_icu", "feedv2", "vr"]  # Google Chrome
+    
+    v8a = v7a = xhdpi = xxhdpi = xxxhdpi = t = None
     for i in split_apks:
-        if i["id"]=="base": base = i["file"]
-        elif i["id"]=="config.zh": zh = i["file"]
+        if i["id"]=="base": install.append(i["file"])
+        elif i["id"]=="config.zh": install.append(i["file"])
         elif i["id"]=="config.arm64_v8a": v8a = i["file"]
         elif i["id"]=="config.armeabi_v7a": v7a = i["file"]
         elif i["id"]=="config.xhdpi": xhdpi = i["file"]
@@ -45,10 +46,8 @@ def install_xapk(file_path):
         elif i["id"]=="config.xxxhdpi": xxxhdpi = i["file"]
         elif i["id"] in other_language: pass
         elif i["id"] in other_dpi: pass
+        elif i["id"] in other: pass
         else: install.append(i["file"])
-        
-    assert base, "xapk解析过程中出现错误：manifest.json中缺少id为`base`的文件！"
-    install.append(base)
     
     if v7a: t = v7a
     if v8a: t = v8a
@@ -60,9 +59,8 @@ def install_xapk(file_path):
     if xhdpi: t = xhdpi
     if t: install.append(t)
     
-    if zh: install.append(zh)
-    
-    subprocess.call(install, shell=True)
+    print(install)
+    return subprocess.call(install, shell=True)
 
 
 if __name__ == "__main__":
