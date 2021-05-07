@@ -106,6 +106,7 @@ def install_xapk(file_path):
 if __name__ == "__main__":
     app = sys.argv[1]
     try:
+        input("1.确保手机已经连接电脑(USB调试/无线调试)\n\r2.确保只有一个设备连接到电脑\n\r回车继续...")
         if app.endswith(".apk"):
             install_apk(app)
         elif app.endswith(".xapk"):
