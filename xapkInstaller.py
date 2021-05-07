@@ -58,7 +58,17 @@ def read_manifest(manifest_path):
 def install_xapk(file_path):
     """安装xapk文件"""
     os.chdir(file_path)
-    split_apks = read_manifest("manifest.json")["split_apks"]
+    manifest = read_manifest("manifest.json")
+    split_apks = manifest["split_apks"]
+    
+    if Device().sdk < int(manifest["min_sdk_version"]):
+        print("安卓版本过低！")
+        return None, 0
+    
+    if Device().sdk > int(manifest["target_sdk_version"]):
+        print("安卓版本过高！")
+        return None, 0
+    
     install = ["adb", "install-multiple", "-rtd"]
     other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
         "config.hi", "config.in", "config.it", "config.ja", "config.ko",
