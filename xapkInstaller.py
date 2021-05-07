@@ -78,7 +78,7 @@ if __name__ == "__main__":
             install_xapk(unzip_path)
         elif os.path.isdir(app):
             if install_xapk(app):
-                if input("安装失败！将尝试卸载后再安装，是否继续？(yes/no)").lower()=="yes":
+                if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
                     uninstall_xapk(app)
                     install_xapk(app)
                 else:
