@@ -53,10 +53,10 @@ def uninstall_xapk(file_path):
     print(uninstall)
     return subprocess.call(uninstall, shell=True)
 
-def install_apk(file_path):
+def install_apk(file_path, abc="-rtd"):
     """安装apk文件"""
-    print(install)
-    return subprocess.call(["adb", "install", "-rtd", file_path], shell=True)
+    install = ["adb", "install", abc, file_path]
+    return install, subprocess.call(install, shell=True)
     
 def read_manifest(manifest_path):
     with open(manifest_path, "r", encoding="utf8") as f:
@@ -119,7 +119,9 @@ if __name__ == "__main__":
     try:
         input("1.确保手机已经连接电脑(USB调试/无线调试)\n\r2.确保只有一个设备连接到电脑\n\r回车继续...")
         if app.endswith(".apk"):
-            install_apk(app)
+            _, status = install_apk(app)
+            if status:  # No argument expected after "-rtd"
+                install_apk(app, "-r")
         elif app.endswith(".xapk"):
             unzip_path = unpack(app)
             install_xapk(unzip_path)
