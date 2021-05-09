@@ -132,6 +132,17 @@ def install_xapk(file_path):
         
         print(install)
         return install, subprocess.call(install, shell=True)
+    elif manifest["xapk_version"]==1:
+        install, status = install_apk(manifest["package_name"]+".apk")
+        print(install)
+        expansions = manifest["expansions"]
+        for i in expansions:
+            if i["install_location"]=="EXTERNAL_STORAGE":
+                install = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
+                print(install)
+                return install, subprocess.call(install, shell=True)
+            else:
+                raise Exception("未知错误！")
 
 
 if __name__ == "__main__":
