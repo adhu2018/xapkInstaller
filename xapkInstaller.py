@@ -56,6 +56,10 @@ def install_apk(file_path, abc="-rtd"):
     """安装apk文件"""
     (dir_path, name_suffix) = os.path.split(file_path)
     os.chdir(dir_path)
+    if " " in name_suffix:
+        copy = ["copy", name_suffix, name_suffix.replace(" ", "")]
+        subprocess.call(copy, shell=True)
+        name_suffix = copy[2]
     
     cmd = ["aapt", "dump", "badging", name_suffix]
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
