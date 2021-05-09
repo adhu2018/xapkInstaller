@@ -154,6 +154,16 @@ def install_xapk(file_path):
 
 
 if __name__ == "__main__":
+    if len(sys.argv)<2:
+        print("缺少参数！")
+        print("xapkInstaller <apk路径|xapk路径|xapk解压路径>")
+        print("例如：")
+        print("    xapkInstaller abc.apk")
+        print("    xapkInstaller abc.xapk")
+        print("    xapkInstaller ./abc/")
+        os.system("pause")
+        os._exit(0)
+    
     app = sys.argv[1]
     try:
         input("1.确保手机已经连接电脑(USB调试/无线调试)\n\r2.确保只有一个设备连接到电脑\n\r回车继续...")
