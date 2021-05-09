@@ -160,6 +160,18 @@ def install_xapk(file_path):
             else:
                 raise Exception("未知错误！")
 
+def check():
+    run = subprocess.run("adb devices", shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    devices = len(run.stdout.strip().split("\n")[1:])
+    
+    if run.returncode: print("未检测到adb！")
+    elif devices==0: print("手机未连接电脑！")
+    elif devices==1: return
+    elif devices>1: print("设备过多！")
+    
+    os.system("pause")
+    sys.exit(1)
+
 
 if __name__ == "__main__":
     if len(sys.argv)<2:
@@ -172,9 +184,11 @@ if __name__ == "__main__":
         os.system("pause")
         sys.exit(0)
     
+    check()
+    
     app = sys.argv[1]
     try:
-        input("1.确保手机已经连接电脑(USB调试/无线调试)\n\r2.确保只有一个设备连接到电脑\n\r回车继续...")
+        
         if app.endswith(".apk"):
             install_apk(app)
         elif app.endswith(".xapk"):
