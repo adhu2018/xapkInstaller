@@ -162,7 +162,7 @@ if __name__ == "__main__":
         print("    xapkInstaller abc.xapk")
         print("    xapkInstaller ./abc/")
         os.system("pause")
-        os._exit(0)
+        sys.exit(0)
     
     app = sys.argv[1]
     try:
