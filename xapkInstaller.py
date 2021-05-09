@@ -16,7 +16,7 @@ class Device:
     
     @property
     def abilist(self):
-        return os.popen("adb shell getprop ro.product.cpu.abilist").read().strip()
+        return os.popen("adb shell getprop ro.product.cpu.abilist").read().strip().split(",")
     
     @property
     def locale(self):
