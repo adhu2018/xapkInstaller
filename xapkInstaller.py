@@ -59,13 +59,13 @@ def install_apk(file_path, abc="-rtd"):
     
     cmd = ["aapt", "dump", "badging", name_suffix]
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    while p.poll() is None:
-        line = p.stdout.readline().decode("utf8")
-        if "sdkVersion" in line:
+    data = p.stdout.read().decode("utf8").split("\n")
+    for line in data:
+        if "sdkVersion:" in line:
             min_sdk_version = int(line.strip().strip("'").split("'")[-1])
-        elif "targetSdkVersion" in line:
+        elif "targetSdkVersion:" in line:
             target_sdk_version = int(line.strip().strip("'").split("'")[-1])
-        elif "native-code" in line: native_code = line
+        elif "native-code:" in line: native_code = line
     
     device = Device()
     if device.sdk < min_sdk_version:
