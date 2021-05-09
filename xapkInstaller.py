@@ -174,9 +174,13 @@ if __name__ == "__main__":
         if app.endswith(".apk"):
             install_apk(app)
         elif app.endswith(".xapk"):
-            unzip_path = unpack(app)
-            install_xapk(unzip_path)
-        elif os.path.isdir(app):
+            app = unpack(app)
+        elif app.endswith(".apks"):
+            print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
+        elif os.path.isfile(app):
+            print(f"{app!r}不是`apk/xapk/apks`安装包！")
+        
+        if os.path.isdir(app):
             install, status = install_xapk(app)
             if status:
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
@@ -188,10 +192,6 @@ if __name__ == "__main__":
                         subprocess.call(install, shell=True)
                 else:
                     print("安装已取消！")
-        elif app.endswith(".apks"):
-            print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
-        else:
-            print(f"{app!r}不是`apk/xapk`安装包或者`xapk`安装包的解压路径！")
     except Exception as err:
         exc_type, exc_value, exc_obj = sys.exc_info()
         traceback.print_tb(exc_obj)
