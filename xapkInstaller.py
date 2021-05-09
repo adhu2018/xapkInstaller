@@ -50,7 +50,6 @@ def unpack(file_path):
 def uninstall_xapk(file_path):
     package_name = read_manifest("manifest.json")["package_name"]
     uninstall = ["adb", "uninstall", package_name]
-    print(uninstall)
     return subprocess.call(uninstall, shell=True)
 
 def install_apk(file_path, abc="-rtd"):
@@ -86,8 +85,7 @@ def install_apk(file_path, abc="-rtd"):
                 install_apk(app, "-r")
             return install, status
     
-    print(native_code)
-    print(f"应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
+    print(f"{native_code}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
     return None, 0
     
 def read_manifest(manifest_path):
@@ -143,16 +141,13 @@ def install_xapk(file_path):
                 break
         if config.get("locale"): install.append(config["locale"])
         
-        print(install)
         return install, subprocess.call(install, shell=True)
     elif manifest["xapk_version"]==1:
         install, status = install_apk(manifest["package_name"]+".apk")
-        print(install)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
                 push = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
-                print(push)
                 return [install, push], subprocess.call(push, shell=True)
             else:
                 raise Exception("未知错误！")
