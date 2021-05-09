@@ -62,10 +62,22 @@ def install_apk(file_path, abc="-rtd"):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     while p.poll() is None:
         line = p.stdout.readline().decode("utf8")
-        if "native-code" in line: native_code = line
-    print(native_code)
+        if "sdkVersion" in line:
+            min_sdk_version = int(line.strip("'").split("'")[-1])
+        elif "targetSdkVersion" in line:
+            target_sdk_version = int(line.strip("'").split("'")[-1])
+        elif "native-code" in line: native_code = line
     
-    abilist = Device().abilist
+    device = Device()
+    if device.sdk < min_sdk_version:
+        print("安卓版本过低！")
+        return None, 0
+    
+    if device.sdk > target_sdk_version:
+        print("安卓版本过高！")
+        return None, 0
+    
+    abilist = device.abilist
     for i in abilist:
         if i in native_code:
             install = ["adb", "install", abc, name_suffix]
@@ -74,6 +86,7 @@ def install_apk(file_path, abc="-rtd"):
                 install_apk(app, "-r")
             return install, status
     
+    print(native_code)
     print(f"应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
     return None, 0
     
