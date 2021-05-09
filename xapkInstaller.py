@@ -50,7 +50,7 @@ def unpack(file_path):
 def uninstall_xapk(file_path):
     package_name = read_manifest("manifest.json")["package_name"]
     uninstall = ["adb", "uninstall", package_name]
-    return subprocess.call(uninstall, shell=True)
+    return subprocess.run(uninstall, shell=True)
 
 def install_apk(file_path, abc="-rtd"):
     """安装apk文件"""
@@ -58,7 +58,7 @@ def install_apk(file_path, abc="-rtd"):
     os.chdir(dir_path)
     if " " in name_suffix:
         copy = ["copy", name_suffix, name_suffix.replace(" ", "")]
-        subprocess.call(copy, shell=True)
+        subprocess.run(copy, shell=True)
         name_suffix = copy[2]
     
     cmd = ["aapt", "dump", "badging", name_suffix]
