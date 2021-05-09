@@ -55,8 +55,27 @@ def uninstall_xapk(file_path):
 
 def install_apk(file_path, abc="-rtd"):
     """安装apk文件"""
-    install = ["adb", "install", abc, file_path]
-    return install, subprocess.call(install, shell=True)
+    (dir_path, name_suffix) = os.path.split(file_path)
+    os.chdir(dir_path)
+    
+    cmd = ["aapt", "dump", "badging", name_suffix]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    while p.poll() is None:
+        line = p.stdout.readline().decode("utf8")
+        if "native-code" in line: native_code = line
+    print(native_code)
+    
+    abilist = Device().abilist
+    for i in abilist:
+        if i in native_code:
+            install = ["adb", "install", abc, name_suffix]
+            status = subprocess.call(install, shell=True)
+            if status:  # No argument expected after "-rtd"
+                install_apk(app, "-r")
+            return install, status
+    
+    print(f"应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
+    return None, 0
     
 def read_manifest(manifest_path):
     with open(manifest_path, "r", encoding="utf8") as f:
@@ -119,9 +138,7 @@ if __name__ == "__main__":
     try:
         input("1.确保手机已经连接电脑(USB调试/无线调试)\n\r2.确保只有一个设备连接到电脑\n\r回车继续...")
         if app.endswith(".apk"):
-            _, status = install_apk(app)
-            if status:  # No argument expected after "-rtd"
-                install_apk(app, "-r")
+            install_apk(app)
         elif app.endswith(".xapk"):
             unzip_path = unpack(app)
             install_xapk(unzip_path)
