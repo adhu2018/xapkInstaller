@@ -151,9 +151,9 @@ def install_xapk(file_path):
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
-                install = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
-                print(install)
-                return install, subprocess.call(install, shell=True)
+                push = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
+                print(push)
+                return [install, push], subprocess.call(push, shell=True)
             else:
                 raise Exception("未知错误！")
 
