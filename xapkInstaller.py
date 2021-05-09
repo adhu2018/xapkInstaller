@@ -204,10 +204,10 @@ if __name__ == "__main__":
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
                     uninstall_xapk(app)
                     if len(install)==2:
-                        subprocess.call(install[0], shell=True)
-                        subprocess.call(install[1], shell=True)
+                        subprocess.run(install[0], shell=True)
+                        subprocess.run(install[1], shell=True)
                     else:
-                        subprocess.call(install, shell=True)
+                        subprocess.run(install, shell=True)
                 else:
                     print("安装已取消！")
     except Exception as err:
