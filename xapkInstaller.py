@@ -171,7 +171,7 @@ def check():
     run = subprocess.run("adb devices", shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     devices = len(run.stdout.strip().split("\n")[1:])
     
-    if run.returncode: print("未检测到adb！")
+    if run.returncode: print(run.stderr)
     elif devices==0: print("手机未连接电脑！")
     elif devices==1: return
     elif devices>1: print("设备过多！")
