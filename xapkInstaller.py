@@ -62,8 +62,12 @@ def install_apk(file_path, abc="-rtd"):
         name_suffix = copy[2]
     
     cmd = ["aapt", "dump", "badging", name_suffix]
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    data = p.stdout.read().decode("utf8").split("\n")
+    run = subprocess.run(cmd, shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if run.returncode:
+        print(run.stderr)
+        os.system("pause")
+        sys.exit(1)
+    data = run.stdout.split("\n")
     for line in data:
         if "sdkVersion:" in line:
             min_sdk_version = int(line.strip().split("'")[1])
