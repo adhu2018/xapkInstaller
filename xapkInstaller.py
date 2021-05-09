@@ -76,9 +76,12 @@ def install_apk(file_path, abc="-rtd"):
         print("安卓版本过低！")
         return None, 0
     
-    if device.sdk > target_sdk_version:
-        print("安卓版本过高！")
-        return None, 0
+    try:
+        if device.sdk > target_sdk_version:
+            print("安卓版本过高！")
+            return None, 0
+    except:
+        pass
     
     abilist = device.abilist
     for i in abilist:
