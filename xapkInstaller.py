@@ -63,9 +63,9 @@ def install_apk(file_path, abc="-rtd"):
     while p.poll() is None:
         line = p.stdout.readline().decode("utf8")
         if "sdkVersion" in line:
-            min_sdk_version = int(line.strip("'").split("'")[-1])
+            min_sdk_version = int(line.strip().strip("'").split("'")[-1])
         elif "targetSdkVersion" in line:
-            target_sdk_version = int(line.strip("'").split("'")[-1])
+            target_sdk_version = int(line.strip().strip("'").split("'")[-1])
         elif "native-code" in line: native_code = line
     
     device = Device()
