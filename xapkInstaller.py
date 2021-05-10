@@ -90,16 +90,23 @@ def install_apk(file_path, abc="-rtd"):
         pass
     
     abilist = device.abilist
-    for i in abilist:
-        if i in native_code:
-            install = ["adb", "install", abc, name_suffix]
-            status = subprocess.call(install, shell=True)
-            if status:  # No argument expected after "-rtd"
-                install_apk(app, "-r")
-            return install, status
     
-    print(f"{native_code}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
-    return None, 0
+    try:
+        def findabi(native_code):
+            for i in abilist:
+                if i in native_code: return True
+            return False
+        if native_code and not findabi(native_code):
+            print(f"{native_code}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
+            return None, 0
+    except UnboundLocalError:
+        pass
+    
+    install = ["adb", "install", abc, name_suffix]
+    status = subprocess.call(install, shell=True)
+    if status:  # No argument expected after "-rtd"
+        install_apk(app, "-r")
+    return install, status
     
 def read_manifest(manifest_path):
     with open(manifest_path, "r", encoding="utf8") as f:
