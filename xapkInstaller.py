@@ -56,21 +56,8 @@ def uninstall_xapk(file_path):
 
 def install_apk(file_path, abc="-rtd"):
     """安装apk文件"""
-    (dir_path, name_suffix) = os.path.split(file_path)
-    os.chdir(dir_path)
-    if " " in name_suffix:
-        copy = ["copy", name_suffix, name_suffix.replace(" ", "")]
-        subprocess.run(copy, shell=True)
-        name_suffix = copy[2]
-    
-    cmd = ["aapt", "dump", "badging", name_suffix]
-    run = subprocess.run(cmd, shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if run.returncode:
-        print(run.stderr)
-        os.system("pause")
-        sys.exit(1)
-    data = run.stdout.split("\n")
-    for line in data:
+    name_suffix, run = dump(file_path)
+    for line in run.stdout.split("\n"):
         if "sdkVersion:" in line:
             min_sdk_version = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line:
@@ -175,6 +162,24 @@ def install_xapk(file_path):
                 return [install, push], subprocess.call(push, shell=True)
             else:
                 raise Exception("未知错误！")
+
+def dump(file_path):
+    if os.path.isabs(file_path):
+        dir_path, name_suffix = os.path.split(file_path)
+        os.chdir(dir_path)
+    else:
+        name_suffix = file_path
+    if " " in name_suffix:
+        copy = ["copy", name_suffix, name_suffix.replace(" ", "")]
+        subprocess.run(copy, shell=True)
+        name_suffix = copy[2]
+    cmd = ["aapt", "dump", "badging", name_suffix]
+    run = subprocess.run(cmd, shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if run.returncode:
+        print(run.stderr)
+        os.system("pause")
+        sys.exit(1)
+    return name_suffix, run
 
 def check():
     run = subprocess.run("adb devices", shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
