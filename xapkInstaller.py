@@ -41,8 +41,8 @@ class Device:
 
 def unpack(file_path):
     """解压xapk文件"""
-    (dir_path, name_suffix) = os.path.split(file_path)
-    (name, suffix) = os.path.splitext(name_suffix)
+    dir_path, name_suffix = os.path.split(file_path)
+    name, suffix = os.path.splitext(name_suffix)
     unpack_path = os.path.join(dir_path, name)
     shutil.unpack_archive(file_path, unpack_path, "zip")
     return unpack_path
@@ -197,7 +197,6 @@ if __name__ == "__main__":
     
     app = sys.argv[1]
     try:
-        
         if app.endswith(".apk"):
             install_apk(app)
         elif app.endswith(".xapk"):
