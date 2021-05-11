@@ -220,6 +220,8 @@ if __name__ == "__main__":
             app = unpack(app)
         elif app.endswith(".apks"):
             install_apks(app)
+        elif app.endswith(".aab"):
+            print("生成apks文件比较麻烦，暂时不考虑适配！")
         elif os.path.isfile(app):
             print(f"{app!r}不是`apk/xapk/apks`安装包！")
         
