@@ -94,6 +94,11 @@ def install_apk(file_path, abc="-rtd"):
     if status:  # No argument expected after "-rtd"
         install_apk(app, "-r")
     return install, status
+
+def install_apks(file_path):
+    # java -jar bundletool.jar install-apks --apks=test.apks
+    # https://github.com/google/bundletool/releases
+    print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
     
 def read_manifest(manifest_path):
     with open(manifest_path, "r", encoding="utf8") as f:
@@ -214,7 +219,7 @@ if __name__ == "__main__":
         elif app.endswith(".xapk"):
             app = unpack(app)
         elif app.endswith(".apks"):
-            print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
+            install_apks(app)
         elif os.path.isfile(app):
             print(f"{app!r}不是`apk/xapk/apks`安装包！")
         
