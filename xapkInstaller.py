@@ -71,8 +71,8 @@ def install_apk(file_path, abc="-rtd"):
     
     try:
         if device.sdk > target_sdk_version:
-            print("安卓版本过高！")
-            return None, 0
+            print("安卓版本过高！可能存在兼容性问题！")
+            # return None, 0
     except:
         pass
     
