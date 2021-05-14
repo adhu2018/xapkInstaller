@@ -45,6 +45,7 @@ def unpack(file_path):
     name, suffix = os.path.splitext(name_suffix)
     unpack_path = os.path.join(dir_path, name)
     shutil.unpack_archive(file_path, unpack_path, "zip")
+    os.chdir(unpack_path)
     return unpack_path
 
 def uninstall_xapk(file_path):
@@ -169,11 +170,7 @@ def install_xapk(file_path):
                 raise Exception("未知错误！")
 
 def dump(file_path):
-    if os.path.isabs(file_path):
-        dir_path, name_suffix = os.path.split(file_path)
-        os.chdir(dir_path)
-    else:
-        name_suffix = file_path
+    _, name_suffix = os.path.split(file_path)
     if " " in name_suffix:
         copy = ["copy", name_suffix, name_suffix.replace(" ", "")]
         subprocess.run(copy, shell=True)
@@ -210,26 +207,33 @@ if __name__ == "__main__":
         os.system("pause")
         sys.exit(0)
     
+    root = os.getcwd()
+    _, name_suffix = os.path.split(sys.argv[1])
+    del_path = [os.path.join(root, name_suffix)]
+    copy = ["copy", sys.argv[1], del_path[0]]
+    print(copy)
+    subprocess.run(copy, shell=True)
+    
     check()
     
-    app = sys.argv[1]
     try:
-        if app.endswith(".apk"):
-            install_apk(app)
-        elif app.endswith(".xapk"):
-            app = unpack(app)
-        elif app.endswith(".apks"):
-            install_apks(app)
-        elif app.endswith(".aab"):
+        if del_path[0].endswith(".apk"):
+            install_apk(del_path[0])
+        elif del_path[0].endswith(".xapk"):
+            del_path.append(unpack(del_path[0]))
+        elif del_path[0].endswith(".apks"):
+            install_apks(del_path[0])
+        elif del_path[0].endswith(".aab"):
             print("生成apks文件比较麻烦，暂时不考虑适配！")
-        elif os.path.isfile(app):
-            print(f"{app!r}不是`apk/xapk/apks`安装包！")
+        elif os.path.isfile(del_path[0]):
+            print(f"{del_path[0]!r}不是`apk/xapk/apks`安装包！")
         
-        if os.path.isdir(app):
-            install, status = install_xapk(app)
+        if os.path.isdir(del_path[-1]):
+            os.chdir(del_path[-1])
+            install, status = install_xapk(del_path[-1])
             if status:
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
-                    uninstall_xapk(app)
+                    uninstall_xapk(del_path[-1])
                     if len(install)==2:
                         subprocess.run(install[0], shell=True)
                         subprocess.run(install[1], shell=True)
@@ -241,4 +245,12 @@ if __name__ == "__main__":
         exc_type, exc_value, exc_obj = sys.exc_info()
         traceback.print_tb(exc_obj)
         print(f"{err!r}")
-    os.system("pause")
+    finally:
+        def delPath(path):
+            if not os.path.exists(path): return
+            print(f"delete    {path}")
+            if os.path.isfile(path): return os.remove(path)
+            return shutil.rmtree(path)
+        os.chdir(root)
+        for i in del_path: delPath(i)
+        os.system("pause")
