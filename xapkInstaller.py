@@ -92,7 +92,7 @@ def install_apk(file_path, abc="-rtd"):
     install = ["adb", "install", abc, name_suffix]
     status = subprocess.call(install, shell=True)
     if status:  # No argument expected after "-rtd"
-        install_apk(app, "-r")
+        install_apk(file_path, "-r")
     return install, status
 
 def install_apks(file_path):
