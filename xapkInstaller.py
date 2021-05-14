@@ -207,7 +207,7 @@ if __name__ == "__main__":
         os.system("pause")
         sys.exit(0)
     
-    root = os.getcwd()
+    root, _ = os.path.split(sys.argv[0])
     _, name_suffix = os.path.split(sys.argv[1])
     del_path = [os.path.join(root, name_suffix)]
     copy = ["copy", sys.argv[1], del_path[0]]
