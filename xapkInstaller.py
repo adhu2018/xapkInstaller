@@ -122,8 +122,8 @@ def install_xapk(file_path):
             return None, 0
         
         if device.sdk > int(manifest["target_sdk_version"]):
-            print("安卓版本过高！")
-            return None, 0
+            print("安卓版本过高！可能存在兼容性问题！")
+            # return None, 0
         
         install = ["adb", "install-multiple", "-rtd"]
         other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
