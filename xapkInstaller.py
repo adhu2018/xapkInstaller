@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import chardet
 import json
 import os
