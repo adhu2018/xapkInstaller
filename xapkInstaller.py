@@ -212,21 +212,24 @@ if __name__ == "__main__":
     del_path = [os.path.join(root, name_suffix)]
     copy = ["copy", sys.argv[1], del_path[0]]
     print(copy)
-    subprocess.run(copy, shell=True)
+    if copy[1]==copy[2]:
+        del del_path[0]
+    else:
+        subprocess.run(copy, shell=True)
     
     check()
     
     try:
-        if del_path[0].endswith(".apk"):
-            install_apk(del_path[0])
-        elif del_path[0].endswith(".xapk"):
-            del_path.append(unpack(del_path[0]))
-        elif del_path[0].endswith(".apks"):
-            install_apks(del_path[0])
-        elif del_path[0].endswith(".aab"):
+        if copy[2].endswith(".apk"):
+            install_apk(copy[2])
+        elif copy[2].endswith(".xapk"):
+            del_path.append(unpack(copy[2]))
+        elif copy[2].endswith(".apks"):
+            install_apks(copy[2])
+        elif copy[2].endswith(".aab"):
             print("生成apks文件比较麻烦，暂时不考虑适配！")
-        elif os.path.isfile(del_path[0]):
-            print(f"{del_path[0]!r}不是`apk/xapk/apks`安装包！")
+        elif os.path.isfile(copy[2]):
+            print(f"{copy[2]!r}不是`apk/xapk/apks`安装包！")
         
         if os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
