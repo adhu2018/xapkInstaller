@@ -1,3 +1,4 @@
+import chardet
 import json
 import os
 import shutil
@@ -5,6 +6,8 @@ import subprocess
 import sys
 import traceback
 
+
+tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
 
 class Device:
     def __init__(self):
@@ -102,9 +105,9 @@ def install_apks(file_path):
     print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
     
 def read_manifest(manifest_path):
-    with open(manifest_path, "r", encoding="utf8") as f:
+    with open(manifest_path, "rb") as f:
         data = f.read()
-    return json.loads(data)
+    return json.loads(tostr(data))
 
 def install_xapk(file_path):
     """安装xapk文件"""
@@ -176,16 +179,19 @@ def dump(file_path):
         subprocess.run(copy, shell=True)
         name_suffix = copy[2]
     cmd = ["aapt", "dump", "badging", name_suffix]
-    run = subprocess.run(cmd, shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # 为什么在copy[1]==copy[2]的情况下，returncode为1，stderr为空，stdout却有值？？
+    # 还可以不按套路的？？？
+    if run.stderr: print(tostr(run.stderr))
+    if run.stdout: print(tostr(run.stdout))
     if run.returncode:
-        print(run.stderr)
         os.system("pause")
         sys.exit(1)
     return name_suffix, run
 
 def check():
-    run = subprocess.run("adb devices", shell=True, encoding="utf8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    devices = len(run.stdout.strip().split("\n")[1:])
+    run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    devices = len(tostr(run.stdout).strip().split("\n")[1:])
     
     if run.returncode: print(run.stderr)
     elif devices==0: print("手机未连接电脑！")
