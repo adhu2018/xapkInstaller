@@ -238,7 +238,7 @@ if __name__ == "__main__":
         elif os.path.isfile(copy[2]):
             print(f"{copy[2]!r}不是`apk/xapk/apks`安装包！")
         
-        if os.path.isdir(del_path[-1]):
+        if del_path and os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
             install, status = install_xapk(del_path[-1])
             if status:
