@@ -62,7 +62,7 @@ def uninstall_xapk(file_path):
 def install_apk(file_path, abc="-rtd"):
     """安装apk文件"""
     name_suffix, run = dump(file_path)
-    for line in run.stdout.split("\n"):
+    for line in tostr(run.stdout).split("\n"):
         if "sdkVersion:" in line:
             min_sdk_version = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line:
