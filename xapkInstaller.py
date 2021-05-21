@@ -230,6 +230,8 @@ if __name__ == "__main__":
     if copy[1]==copy[2]:
         del del_path[0]
     else:
+        if os.path.exists(copy[2]):
+            delPath(copy[2])
         if os.path.isfile(copy[1]):
             subprocess.run(copy, shell=True)
         else:
