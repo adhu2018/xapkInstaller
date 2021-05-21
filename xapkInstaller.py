@@ -236,7 +236,6 @@ if __name__ == "__main__":
             subprocess.run(copy, shell=True)
         else:
             shutil.copytree(copy[1], copy[2])
-        
     
     check()
     
