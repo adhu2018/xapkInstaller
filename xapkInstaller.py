@@ -203,6 +203,12 @@ def check():
     
     os.system("pause")
     sys.exit(1)
+    
+def delPath(path):
+    if not os.path.exists(path): return
+    print(f"delete    {path}")
+    if os.path.isfile(path): return os.remove(path)
+    return shutil.rmtree(path)
 
 
 if __name__ == "__main__":
@@ -266,11 +272,6 @@ if __name__ == "__main__":
         traceback.print_tb(exc_obj)
         print(f"{err!r}")
     finally:
-        def delPath(path):
-            if not os.path.exists(path): return
-            print(f"delete    {path}")
-            if os.path.isfile(path): return os.remove(path)
-            return shutil.rmtree(path)
         os.chdir(root)
         for i in del_path: delPath(i)
         os.system("pause")
