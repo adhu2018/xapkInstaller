@@ -224,7 +224,11 @@ if __name__ == "__main__":
     if copy[1]==copy[2]:
         del del_path[0]
     else:
-        subprocess.run(copy, shell=True)
+        if os.path.isfile(copy[1]):
+            subprocess.run(copy, shell=True)
+        else:
+            shutil.copytree(copy[1], copy[2])
+        
     
     check()
     
