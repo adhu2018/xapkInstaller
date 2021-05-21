@@ -151,7 +151,9 @@ def install_xapk(file_path):
             elif i["id"] in other: pass
             else: install.append(i["file"])
         
-        if not config.get("abi"):
+        if config.get("abi"):
+            install.append(config["abi"])
+        else:
             for i in device.abilist:
                 if config.get(i):
                     install.append(config[i])
