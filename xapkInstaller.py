@@ -192,7 +192,7 @@ def dump(file_path):
         sys.exit(1)
     return name_suffix, run
 
-def check():
+def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     devices = len(tostr(run.stdout).strip().split("\n")[1:])
     
@@ -201,7 +201,7 @@ def check():
     elif devices==1: return
     elif devices>1: print("设备过多！")
     
-    os.system("pause")
+    del_exit(root, del_path)
     sys.exit(1)
     
 def delPath(path):
@@ -209,6 +209,11 @@ def delPath(path):
     print(f"delete    {path}")
     if os.path.isfile(path): return os.remove(path)
     return shutil.rmtree(path)
+
+def del_exit(root, del_path):
+    os.chdir(root)
+    for i in del_path: delPath(i)
+    os.system("pause")
 
 
 if __name__ == "__main__":
@@ -237,7 +242,7 @@ if __name__ == "__main__":
         else:
             shutil.copytree(copy[1], copy[2])
     
-    check()
+    check(root, del_path)
     
     try:
         if copy[2].endswith(".apk"):
@@ -273,6 +278,4 @@ if __name__ == "__main__":
         traceback.print_tb(exc_obj)
         print(f"{err!r}")
     finally:
-        os.chdir(root)
-        for i in del_path: delPath(i)
-        os.system("pause")
+        del_exit(root, del_path)
