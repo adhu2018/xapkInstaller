@@ -183,8 +183,6 @@ def dump(file_path):
         name_suffix = copy[2]
     cmd = ["aapt", "dump", "badging", name_suffix]
     run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # 为什么在copy[1]==copy[2]的情况下，returncode为1，stderr为空，stdout却有值？？
-    # 还可以不按套路的？？？
     if run.stderr: print(tostr(run.stderr))
     if run.stdout: print(tostr(run.stdout))
     if run.returncode:
