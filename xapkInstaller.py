@@ -166,7 +166,7 @@ def install_xapk(file_path):
         
         return install, subprocess.call(install, shell=True)
     elif manifest["xapk_version"]==1:
-        install, status = install_apk(manifest["package_name"]+".apk")
+        install, _ = install_apk(manifest["package_name"]+".apk")
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
