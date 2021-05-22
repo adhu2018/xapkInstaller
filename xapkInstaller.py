@@ -202,7 +202,6 @@ def check(root, del_path):
     elif devices>1: print("设备过多！")
     
     del_exit(root, del_path)
-    sys.exit(1)
     
 def delPath(path):
     if not os.path.exists(path): return
@@ -214,6 +213,7 @@ def del_exit(root, del_path):
     os.chdir(root)
     for i in del_path: delPath(i)
     os.system("pause")
+    sys.exit(1)
 
 
 if __name__ == "__main__":
