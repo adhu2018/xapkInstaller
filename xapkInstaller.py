@@ -254,16 +254,12 @@ if __name__ == "__main__":
         elif os.path.isfile(copy[2]):
             print(f"{copy[2]!r}不是`apk/xapk/apks`安装包！")
         
-        if del_path or copy[1]==copy[2]:
-            if del_path:
-                install_path = del_path[-1]
-            else:
-                install_path = copy[2]
-            os.chdir(install_path)
-            install, status = install_xapk(install_path)
+        if os.path.isdir(del_path[-1]):
+            os.chdir(del_path[-1])
+            install, status = install_xapk(del_path[-1])
             if status:
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
-                    uninstall_xapk(install_path)
+                    uninstall_xapk(del_path[-1])
                     if len(install)==2:
                         subprocess.run(install[0], shell=True)
                         subprocess.run(install[1], shell=True)
