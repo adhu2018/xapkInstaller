@@ -232,32 +232,21 @@ def del_exit(root, del_path):
     os.system("pause")
     sys.exit(1)
 
-
-if __name__ == "__main__":
-    if len(sys.argv)<2:
-        print("缺少参数！")
-        print("xapkInstaller <apk路径|xapk路径|xapk解压路径>")
-        print("例如：")
-        print("    xapkInstaller abc.apk")
-        print("    xapkInstaller abc.xapk")
-        print("    xapkInstaller ./abc/")
-        os.system("pause")
-        sys.exit(0)
-    
-    root, _ = os.path.split(sys.argv[0])
-    _, name_suffix = os.path.split(sys.argv[1])
-    del_path = [os.path.join(root, name_suffix)]
-    copy = ["copy", sys.argv[1], del_path[0]]
+def main(root, one):
+    _, name_suffix = os.path.split(one)
+    name_suffix = name_suffix.rsplit(".", 1)
+    new_path = md5(name_suffix[0])
+    if len(name_suffix)>1:
+        new_path += f".{name_suffix[1]}"
+    del_path = [os.path.join(root, new_path)]
+    copy = ["copy", one, del_path[0]]
     print(copy)
-    if copy[1]==copy[2]:
-        del del_path[0]
+    if os.path.exists(copy[2]):
+        delPath(copy[2])
+    if os.path.isfile(copy[1]):
+        shutil.copyfile(copy[1], copy[2])
     else:
-        if os.path.exists(copy[2]):
-            delPath(copy[2])
-        if os.path.isfile(copy[1]):
-            subprocess.run(copy, shell=True)
-        else:
-            shutil.copytree(copy[1], copy[2])
+        shutil.copytree(copy[1], copy[2])
     
     check(root, del_path)
     
@@ -289,9 +278,42 @@ if __name__ == "__main__":
                 else:
                     print("安装已取消！")
                     sys.exit(1)
+        return True
+    except SystemExit:
+        return False
+    except Exception as err:
+        exc_type, exc_value, exc_obj = sys.exc_info()
+        traceback.print_tb(exc_obj)
+        print(f"{err!r}")
+        return False
+    finally:
+        os.chdir(root)
+        for i in del_path: delPath(i)
+
+
+if __name__ == "__main__":
+    if len(sys.argv)<2:
+        print("缺少参数！")
+        print("xapkInstaller <apk路径|xapk路径|xapk解压路径>")
+        print("例如：")
+        print("    xapkInstaller abc.apk")
+        print("    xapkInstaller abc.xapk")
+        print("    xapkInstaller ./abc/")
+        os.system("pause")
+        sys.exit(0)
+    root, _ = os.path.split(sys.argv[0])
+    _len_ = len(sys.argv[1:])
+    success = 0
+    try:
+        for i, one in enumerate(sys.argv[1:]):
+            print(f"正在安装第{i+1}/{_len_}个...")
+            if main(root, one):
+                success += 1
     except Exception as err:
         exc_type, exc_value, exc_obj = sys.exc_info()
         traceback.print_tb(exc_obj)
         print(f"{err!r}")
     finally:
-        del_exit(root, del_path)
+        print(f"共{_len_}个，成功安装了{success}个。")
+        os.system("pause")
+        sys.exit(0)
