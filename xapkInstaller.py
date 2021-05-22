@@ -135,7 +135,6 @@ def install_xapk(file_path):
     os.chdir(file_path)
     if not os.path.isfile("manifest.json"):
         print(f"{file_path!r}不是`xapk`安装包的解压路径！")
-        os.system("pause")
         sys.exit(1)
     manifest = read_manifest("manifest.json")
     if manifest["xapk_version"]==2:
