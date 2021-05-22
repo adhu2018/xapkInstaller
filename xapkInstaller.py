@@ -263,7 +263,7 @@ if __name__ == "__main__":
     
     try:
         if copy[2].endswith(".apk"):
-            install_apk(copy[2])
+            if not install_apk(copy[2])[0]: sys.exit(1)
         elif copy[2].endswith(".xapk"):
             del_path.append(unpack(copy[2]))
         elif copy[2].endswith(".apks"):
