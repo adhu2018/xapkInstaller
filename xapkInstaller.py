@@ -271,8 +271,10 @@ if __name__ == "__main__":
             install_apks(copy[2])
         elif copy[2].endswith(".aab"):
             print("生成apks文件比较麻烦，暂时不考虑适配！")
+            sys.exit(1)
         elif os.path.isfile(copy[2]):
             print(f"{copy[2]!r}不是`apk/xapk/apks`安装包！")
+            sys.exit(1)
         
         if os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
@@ -287,6 +289,7 @@ if __name__ == "__main__":
                         subprocess.run(install, shell=True)
                 else:
                     print("安装已取消！")
+                    sys.exit(1)
     except Exception as err:
         exc_type, exc_value, exc_obj = sys.exc_info()
         traceback.print_tb(exc_obj)
