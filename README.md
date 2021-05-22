@@ -5,3 +5,9 @@
 ```powershell
 pyinstaller -F xapkInstaller.py -n xapkInstaller4win.exe
 ```
+
+使用方法：
+- 直接拖拽（推荐）：将需要安装的一个或多个文件（夹）拖向xapkInstaller即可。
+- 命令行：xapkInstaller后添加需要安装的文件（夹），添加多个时使用空格隔开。
+
+文件夹指xapk的解压文件夹。
