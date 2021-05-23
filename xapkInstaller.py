@@ -81,7 +81,7 @@ def uninstall_xapk(file_path):
     # uninstall = ["adb", "shell", "pm", "uninstall", "-k", package_name]
     return subprocess.run(uninstall, shell=True)
 
-def install_apk(file_path, abc="-rtd"):
+def install_apk(file_path, del_path, abc="-rtd", ):
     """安装apk文件"""
     name_suffix, manifest = dump(file_path)
     for line in manifest.split("\n"):
@@ -118,7 +118,7 @@ def install_apk(file_path, abc="-rtd"):
     install = ["adb", "install", abc, name_suffix]
     status = subprocess.call(install, shell=True)
     if status:  # No argument expected after "-rtd"
-        install_apk(file_path, "-r")
+        install_apk(file_path, del_path, "-r")
     return install, status
 
 def install_apks(file_path):
@@ -186,7 +186,7 @@ def install_xapk(file_path):
         
         return install, subprocess.call(install, shell=True)
     elif manifest["xapk_version"]==1:
-        install, _ = install_apk(manifest["package_name"]+".apk")
+        install, _ = install_apk(manifest["package_name"]+".apk", del_path)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
@@ -263,7 +263,7 @@ def main(root, one):
     
     try:
         if copy[1].endswith(".apk"):
-            if not install_apk(copy[1])[0]: sys.exit(1)
+            if not install_apk(copy[1], del_path)[0]: sys.exit(1)
         elif copy[1].endswith(".xapk"):
             del_path.append(unpack(copy[1]))
             os.chdir(del_path[-1])
