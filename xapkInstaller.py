@@ -69,7 +69,6 @@ def unpack(file_path):
     name, suffix = os.path.splitext(name_suffix)
     unpack_path = os.path.join(dir_path, name)
     shutil.unpack_archive(file_path, unpack_path, "zip")
-    os.chdir(unpack_path)
     return unpack_path
 
 def uninstall_xapk(file_path):
@@ -250,6 +249,7 @@ def main(root, one):
             if not install_apk(copy[1])[0]: sys.exit(1)
         elif copy[1].endswith(".xapk"):
             del_path.append(unpack(copy[1]))
+            os.chdir(del_path[-1])
         elif copy[1].endswith(".apks"):
             install_apks(copy[1])
         elif copy[1].endswith(".aab"):
