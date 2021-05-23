@@ -13,25 +13,6 @@ from axmlparserpy import axmlprinter
 
 tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
 
-def md5(*_str):
-    if len(_str) > 0:
-        t = _str[0]
-        if type(t) is not str:
-            t = str(t)
-        encode_type = "utf-8"
-        if len(_str) > 1:
-            encode_type = _str[1]
-        m = hashlib.md5()
-        try:
-            t = t.encode(encode_type)
-        except LookupError:
-            t = t.encode("utf-8")
-        m.update(t)
-        return m.hexdigest()
-    else:
-        print("缺少参数！")
-        return False
-
 class Device:
     def __init__(self):
         self._sdk = None
@@ -64,22 +45,58 @@ class Device:
         self._sdk = int(self._sdk)
         return self._sdk
 
+def check(root, del_path):
+    run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    devices = len(tostr(run.stdout).strip().split("\n")[1:])
+    
+    if run.returncode: print(run.stderr)
+    elif devices==0: print("安装失败：手机未连接电脑！")
+    elif devices==1: return
+    elif devices>1: print("安装失败：设备过多！暂不支持多设备情况下进行安装！")
+    
+    os.chdir(root)
+    for i in del_path: delPath(i)
+    sys.exit(1)
 
-def unpack(file_path):
-    """解压文件"""
-    print("文件越大，解压越慢，请耐心等待...")
-    dir_path, name_suffix = os.path.split(file_path)
-    name, suffix = os.path.splitext(name_suffix)
-    unpack_path = os.path.join(dir_path, name)
-    shutil.unpack_archive(file_path, unpack_path, "zip")
-    return unpack_path
+def delPath(path):
+    if not os.path.exists(path): return
+    print(f"删除    {path}")
+    if os.path.isfile(path): return os.remove(path)
+    return shutil.rmtree(path)
 
-def uninstall_xapk(file_path):
-    package_name = read_manifest("manifest.json")["package_name"]
-    uninstall = ["adb", "uninstall", package_name]
-    # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
-    # uninstall = ["adb", "shell", "pm", "uninstall", "-k", package_name]
-    return subprocess.run(uninstall, shell=True)
+def dump(file_path, del_path):
+    cmd = ["aapt", "dump", "badging", file_path]
+    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if run.stderr: print(tostr(run.stderr))
+    if run.stdout: print(tostr(run.stdout))
+    if run.returncode: return dump_py(file_path, del_path)
+    manifest = {}
+    for line in tostr(run.stdout).split("\n"):
+        if "sdkVersion:" in line:
+            manifest["min_sdk_version"] = int(line.strip().split("'")[1])
+        elif "targetSdkVersion:" in line:
+            manifest["target_sdk_version"] = int(line.strip().split("'")[1])
+        elif "native-code:" in line: manifest["native_code"] = line
+    return manifest
+
+def dump_py(file_path, del_path):
+    unpack_path = unpack(file_path)
+    del_path.append(unpack_path)
+    with open(os.path.join(unpack_path, "AndroidManifest.xml"), "rb") as f:
+        data = f.read()
+    ap = axmlprinter.AXMLPrinter(data)
+    buff = minidom.parseString(ap.getBuff())
+    manifest = {}
+    manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
+    try:
+        manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
+    except:
+        pass
+    try:
+        manifest["native_code"] = os.listdir(os.path.join(unpack_path, "lib"))
+    except:
+        pass
+    return manifest
 
 def install_apk(file_path, del_path, abc="-rtd", ):
     """安装apk文件"""
@@ -120,11 +137,6 @@ def install_apks(file_path):
     # java -jar bundletool.jar install-apks --apks=test.apks
     # https://github.com/google/bundletool/releases
     print("安装失败：apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
-    
-def read_manifest(manifest_path):
-    with open(manifest_path, "rb") as f:
-        data = f.read()
-    return json.loads(tostr(data))
 
 def install_xapk(file_path, del_path):
     """安装xapk文件"""
@@ -190,59 +202,6 @@ def install_xapk(file_path, del_path):
             else:
                 raise Exception("安装失败：未知错误！请提供文件进行适配！")
 
-def dump(file_path, del_path):
-    cmd = ["aapt", "dump", "badging", file_path]
-    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if run.stderr: print(tostr(run.stderr))
-    if run.stdout: print(tostr(run.stdout))
-    if run.returncode: return dump_py(file_path, del_path)
-    manifest = {}
-    for line in tostr(run.stdout).split("\n"):
-        if "sdkVersion:" in line:
-            manifest["min_sdk_version"] = int(line.strip().split("'")[1])
-        elif "targetSdkVersion:" in line:
-            manifest["target_sdk_version"] = int(line.strip().split("'")[1])
-        elif "native-code:" in line: manifest["native_code"] = line
-    return manifest
-
-def dump_py(file_path, del_path):
-    unpack_path = unpack(file_path)
-    del_path.append(unpack_path)
-    with open(os.path.join(unpack_path, "AndroidManifest.xml"), "rb") as f:
-        data = f.read()
-    ap = axmlprinter.AXMLPrinter(data)
-    buff = minidom.parseString(ap.getBuff())
-    manifest = {}
-    manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
-    try:
-        manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
-    except:
-        pass
-    try:
-        manifest["native_code"] = os.listdir(os.path.join(unpack_path, "lib"))
-    except:
-        pass
-    return manifest
-
-def check(root, del_path):
-    run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    devices = len(tostr(run.stdout).strip().split("\n")[1:])
-    
-    if run.returncode: print(run.stderr)
-    elif devices==0: print("安装失败：手机未连接电脑！")
-    elif devices==1: return
-    elif devices>1: print("安装失败：设备过多！暂不支持多设备情况下进行安装！")
-    
-    os.chdir(root)
-    for i in del_path: delPath(i)
-    sys.exit(1)
-    
-def delPath(path):
-    if not os.path.exists(path): return
-    print(f"删除    {path}")
-    if os.path.isfile(path): return os.remove(path)
-    return shutil.rmtree(path)
-
 def main(root, one):
     _, name_suffix = os.path.split(one)
     name_suffix = name_suffix.rsplit(".", 1)
@@ -301,6 +260,46 @@ def main(root, one):
     finally:
         os.chdir(root)
         for i in del_path: delPath(i)
+
+def md5(*_str):
+    if len(_str) > 0:
+        t = _str[0]
+        if type(t) is not str:
+            t = str(t)
+        encode_type = "utf-8"
+        if len(_str) > 1:
+            encode_type = _str[1]
+        m = hashlib.md5()
+        try:
+            t = t.encode(encode_type)
+        except LookupError:
+            t = t.encode("utf-8")
+        m.update(t)
+        return m.hexdigest()
+    else:
+        print("缺少参数！")
+        return False
+
+def read_manifest(manifest_path):
+    with open(manifest_path, "rb") as f:
+        data = f.read()
+    return json.loads(tostr(data))
+
+def uninstall_xapk(file_path):
+    package_name = read_manifest("manifest.json")["package_name"]
+    uninstall = ["adb", "uninstall", package_name]
+    # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
+    # uninstall = ["adb", "shell", "pm", "uninstall", "-k", package_name]
+    return subprocess.run(uninstall, shell=True)
+
+def unpack(file_path):
+    """解压文件"""
+    print("文件越大，解压越慢，请耐心等待...")
+    dir_path, name_suffix = os.path.split(file_path)
+    name, suffix = os.path.splitext(name_suffix)
+    unpack_path = os.path.join(dir_path, name)
+    shutil.unpack_archive(file_path, unpack_path, "zip")
+    return unpack_path
 
 
 if __name__ == "__main__":
