@@ -108,8 +108,8 @@ def install_apk(file_path, abc="-rtd"):
                 if i in native_code: return True
             return False
         if native_code and not findabi(native_code):
-            print(f"{native_code}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
-            return None, 0
+            print(f"安装失败：{native_code}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
+            sys.exit(1)
     except UnboundLocalError:
         pass
     
@@ -122,7 +122,7 @@ def install_apk(file_path, abc="-rtd"):
 def install_apks(file_path):
     # java -jar bundletool.jar install-apks --apks=test.apks
     # https://github.com/google/bundletool/releases
-    print("apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
+    print("安装失败：apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
     
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f:
@@ -133,7 +133,7 @@ def install_xapk(file_path):
     """安装xapk文件"""
     os.chdir(file_path)
     if not os.path.isfile("manifest.json"):
-        print(f"路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
+        print(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
         sys.exit(1)
     manifest = read_manifest("manifest.json")
     if manifest["xapk_version"]==2:
@@ -191,7 +191,7 @@ def install_xapk(file_path):
                 push = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
                 return [install, push], subprocess.call(push, shell=True)
             else:
-                raise Exception("未知错误！")
+                raise Exception("安装失败：未知错误！请提供文件进行适配！")
 
 def dump(file_path):
     _, name_suffix = os.path.split(file_path)
@@ -213,9 +213,9 @@ def check(root, del_path):
     devices = len(tostr(run.stdout).strip().split("\n")[1:])
     
     if run.returncode: print(run.stderr)
-    elif devices==0: print("手机未连接电脑！")
+    elif devices==0: print("安装失败：手机未连接电脑！")
     elif devices==1: return
-    elif devices>1: print("设备过多！")
+    elif devices>1: print("安装失败：设备过多！暂不支持多设备情况下进行安装！")
     
     del_exit(root, del_path)
     
