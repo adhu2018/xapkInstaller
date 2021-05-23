@@ -7,6 +7,8 @@ import shutil
 import subprocess
 import sys
 import traceback
+import xml.dom.minidom as minidom
+from axmlparserpy import axmlprinter
 
 
 tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
@@ -203,6 +205,21 @@ def dump(file_path):
         print("安装失败：如果你认为该文件没有问题，请提交文件进行适配！")
         sys.exit(1)
     return name_suffix, tostr(run.stdout)
+
+def dump_py(file_path):
+    unpack_path = unpack(file_path)
+    with open(os.path.join(unpack_path, "AndroidManifest.xml"), "rb") as f:
+        data = f.read()
+    ap = axmlprinter.AXMLPrinter(data)
+    buff = minidom.parseString(ap.getBuff())
+    manifest = {}
+    manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
+    manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
+    try:
+        manifest["native_code"] = os.listdir(os.path.join(unpack_path, "lib"))
+    except:
+        pass
+    return manifest
 
 def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
