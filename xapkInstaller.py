@@ -238,29 +238,29 @@ def main(root, one):
     if len(name_suffix)>1:
         new_path += f".{name_suffix[1]}"
     del_path = [os.path.join(root, new_path)]
-    copy = ["copy", one, del_path[0]]
+    copy = [one, del_path[0]]
     print(f"复制 `{one}` 到 `{del_path[0]}`")
-    if os.path.exists(copy[2]):
-        delPath(copy[2])
-    if os.path.isfile(copy[1]):
-        shutil.copyfile(copy[1], copy[2])
+    if os.path.exists(copy[1]):
+        delPath(copy[1])
+    if os.path.isfile(copy[0]):
+        shutil.copyfile(copy[0], copy[1])
     else:
-        shutil.copytree(copy[1], copy[2])
+        shutil.copytree(copy[0], copy[1])
     
     check(root, del_path)
     
     try:
-        if copy[2].endswith(".apk"):
-            if not install_apk(copy[2])[0]: sys.exit(1)
-        elif copy[2].endswith(".xapk"):
-            del_path.append(unpack(copy[2]))
-        elif copy[2].endswith(".apks"):
-            install_apks(copy[2])
-        elif copy[2].endswith(".aab"):
+        if copy[1].endswith(".apk"):
+            if not install_apk(copy[1])[0]: sys.exit(1)
+        elif copy[1].endswith(".xapk"):
+            del_path.append(unpack(copy[1]))
+        elif copy[1].endswith(".apks"):
+            install_apks(copy[1])
+        elif copy[1].endswith(".aab"):
             print("生成apks文件比较麻烦，暂时不考虑适配！")
             sys.exit(1)
-        elif os.path.isfile(copy[2]):
-            print(f"{copy[2]!r}不是`apk/xapk/apks`安装包！")
+        elif os.path.isfile(copy[1]):
+            print(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
             sys.exit(1)
         
         if os.path.isdir(del_path[-1]):
