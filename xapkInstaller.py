@@ -302,8 +302,7 @@ if __name__ == "__main__":
     try:
         for i, one in enumerate(sys.argv[1:]):
             print(f"正在安装第{i+1}/{_len_}个...")
-            if main(root, one):
-                success += 1
+            if main(root, one): success += 1
     except Exception as err:
         exc_type, exc_value, exc_obj = sys.exc_info()
         traceback.print_tb(exc_obj)
