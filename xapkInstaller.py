@@ -91,12 +91,12 @@ def install_apk(file_path, abc="-rtd"):
     
     device = Device()
     if device.sdk < min_sdk_version:
-        print("安卓版本过低！")
-        return None, 0
+        print("安装失败：安卓版本过低！")
+        sys.exit(1)
     
     try:
         if device.sdk > target_sdk_version:
-            print("安卓版本过高！可能存在兼容性问题！")
+            print("警告：安卓版本过高！可能存在兼容性问题！")
             # return None, 0
     except:
         pass
@@ -134,7 +134,7 @@ def install_xapk(file_path):
     """安装xapk文件"""
     os.chdir(file_path)
     if not os.path.isfile("manifest.json"):
-        print(f"{file_path!r}不是`xapk`安装包的解压路径！")
+        print(f"路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
         sys.exit(1)
     manifest = read_manifest("manifest.json")
     if manifest["xapk_version"]==2:
@@ -142,11 +142,11 @@ def install_xapk(file_path):
         
         device = Device()
         if device.sdk < int(manifest["min_sdk_version"]):
-            print("安卓版本过低！")
-            return None, 0
+            print("安装失败：安卓版本过低！")
+            sys.exit(1)
         
         if device.sdk > int(manifest["target_sdk_version"]):
-            print("安卓版本过高！可能存在兼容性问题！")
+            print("警告：安卓版本过高！可能存在兼容性问题！")
             # return None, 0
         
         install = ["adb", "install-multiple", "-rtd"]
@@ -222,7 +222,7 @@ def check(root, del_path):
     
 def delPath(path):
     if not os.path.exists(path): return
-    print(f"delete    {path}")
+    print(f"删除    {path}")
     if os.path.isfile(path): return os.remove(path)
     return shutil.rmtree(path)
 
@@ -240,7 +240,7 @@ def main(root, one):
         new_path += f".{name_suffix[1]}"
     del_path = [os.path.join(root, new_path)]
     copy = ["copy", one, del_path[0]]
-    print(copy)
+    print(f"复制 `{one}` 到 `{del_path[0]}`")
     if os.path.exists(copy[2]):
         delPath(copy[2])
     if os.path.isfile(copy[1]):
