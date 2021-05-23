@@ -81,8 +81,8 @@ def uninstall_xapk(file_path):
 
 def install_apk(file_path, abc="-rtd"):
     """安装apk文件"""
-    name_suffix, run = dump(file_path)
-    for line in tostr(run.stdout).split("\n"):
+    name_suffix, manifest = dump(file_path)
+    for line in manifest.split("\n"):
         if "sdkVersion:" in line:
             min_sdk_version = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line:
@@ -206,7 +206,7 @@ def dump(file_path):
     if run.returncode:
         print("安装失败：如果你认为该文件没有问题，请提交文件进行适配！")
         sys.exit(1)
-    return name_suffix, run
+    return name_suffix, tostr(run.stdout)
 
 def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
