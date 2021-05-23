@@ -92,12 +92,12 @@ def install_apk(file_path, abc="-rtd"):
         elif "native-code:" in line: native_code = line
     
     device = Device()
-    if device.sdk < min_sdk_version:
+    if device.sdk < manifest["min_sdk_version"]:
         print("安装失败：安卓版本过低！")
         sys.exit(1)
     
     try:
-        if device.sdk > target_sdk_version:
+        if device.sdk > manifest["target_sdk_version"]:
             print("警告：安卓版本过高！可能存在兼容性问题！")
     except:
         pass
@@ -109,8 +109,8 @@ def install_apk(file_path, abc="-rtd"):
             for i in abilist:
                 if i in native_code: return True
             return False
-        if native_code and not findabi(native_code):
-            print(f"安装失败：{native_code}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
+        if manifest.get("native_code") and not findabi(manifest["native_code"]):
+            print(f"安装失败：{manifest['native_code']}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
             sys.exit(1)
     except UnboundLocalError:
         pass
