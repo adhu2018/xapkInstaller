@@ -204,7 +204,7 @@ def dump(file_path):
     if run.stderr: print(tostr(run.stderr))
     if run.stdout: print(tostr(run.stdout))
     if run.returncode:
-        os.system("pause")
+        print("安装失败：如果你认为该文件没有问题，请提交文件进行适配！")
         sys.exit(1)
     return name_suffix, run
 
