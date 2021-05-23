@@ -217,19 +217,15 @@ def check(root, del_path):
     elif devices==1: return
     elif devices>1: print("安装失败：设备过多！暂不支持多设备情况下进行安装！")
     
-    del_exit(root, del_path)
+    os.chdir(root)
+    for i in del_path: delPath(i)
+    sys.exit(1)
     
 def delPath(path):
     if not os.path.exists(path): return
     print(f"删除    {path}")
     if os.path.isfile(path): return os.remove(path)
     return shutil.rmtree(path)
-
-def del_exit(root, del_path):
-    os.chdir(root)
-    for i in del_path: delPath(i)
-    os.system("pause")
-    sys.exit(1)
 
 def main(root, one):
     _, name_suffix = os.path.split(one)
