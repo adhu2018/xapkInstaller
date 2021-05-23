@@ -214,7 +214,10 @@ def dump_py(file_path):
     buff = minidom.parseString(ap.getBuff())
     manifest = {}
     manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
-    manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
+    try:
+        manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
+    except:
+        pass
     try:
         manifest["native_code"] = os.listdir(os.path.join(unpack_path, "lib"))
     except:
