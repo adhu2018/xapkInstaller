@@ -248,7 +248,7 @@ def main(root, one):
         new_path += f".{name_suffix[1]}"
     del_path = [os.path.join(root, new_path)]
     copy = [one, del_path[0]]
-    print(f"复制 `{one}` 到 `{del_path[0]}`")
+    print(f"正在复制 `{one}` 到 `{del_path[0]}`")
     if os.path.exists(copy[1]):
         delPath(copy[1])
     if os.path.isfile(copy[0]):
