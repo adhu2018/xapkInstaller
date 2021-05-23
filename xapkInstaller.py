@@ -64,7 +64,8 @@ class Device:
 
 
 def unpack(file_path):
-    """解压xapk文件"""
+    """解压文件"""
+    print("文件越大，解压越慢，请耐心等待...")
     dir_path, name_suffix = os.path.split(file_path)
     name, suffix = os.path.splitext(name_suffix)
     unpack_path = os.path.join(dir_path, name)
