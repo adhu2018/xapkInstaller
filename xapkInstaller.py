@@ -83,13 +83,8 @@ def uninstall_xapk(file_path):
 
 def install_apk(file_path, del_path, abc="-rtd", ):
     """安装apk文件"""
-    name_suffix, manifest = dump(file_path)
-    for line in manifest.split("\n"):
-        if "sdkVersion:" in line:
-            min_sdk_version = int(line.strip().split("'")[1])
-        elif "targetSdkVersion:" in line:
-            target_sdk_version = int(line.strip().split("'")[1])
-        elif "native-code:" in line: native_code = line
+    _, name_suffix = os.path.split(file_path)
+    manifest = dump(name_suffix, del_path)
     
     device = Device()
     if device.sdk < manifest["min_sdk_version"]:
@@ -131,7 +126,7 @@ def read_manifest(manifest_path):
         data = f.read()
     return json.loads(tostr(data))
 
-def install_xapk(file_path):
+def install_xapk(file_path, del_path):
     """安装xapk文件"""
     os.chdir(file_path)
     if not os.path.isfile("manifest.json"):
@@ -195,19 +190,24 @@ def install_xapk(file_path):
             else:
                 raise Exception("安装失败：未知错误！请提供文件进行适配！")
 
-def dump(file_path):
-    _, name_suffix = os.path.split(file_path)
-    cmd = ["aapt", "dump", "badging", name_suffix]
+def dump(file_path, del_path):
+    cmd = ["aapt", "dump", "badging", file_path]
     run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.stderr: print(tostr(run.stderr))
     if run.stdout: print(tostr(run.stdout))
-    if run.returncode:
-        print("安装失败：如果你认为该文件没有问题，请提交文件进行适配！")
-        sys.exit(1)
-    return name_suffix, tostr(run.stdout)
+    if run.returncode: return dump_py(file_path, del_path)
+    manifest = {}
+    for line in tostr(run.stdout).split("\n"):
+        if "sdkVersion:" in line:
+            manifest["min_sdk_version"] = int(line.strip().split("'")[1])
+        elif "targetSdkVersion:" in line:
+            manifest["target_sdk_version"] = int(line.strip().split("'")[1])
+        elif "native-code:" in line: manifest["native_code"] = line
+    return manifest
 
-def dump_py(file_path):
+def dump_py(file_path, del_path):
     unpack_path = unpack(file_path)
+    del_path.append(unpack_path)
     with open(os.path.join(unpack_path, "AndroidManifest.xml"), "rb") as f:
         data = f.read()
     ap = axmlprinter.AXMLPrinter(data)
@@ -278,7 +278,7 @@ def main(root, one):
         
         if os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
-            install, status = install_xapk(del_path[-1])
+            install, status = install_xapk(del_path[-1], del_path)
             if status:
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
                     uninstall_xapk(del_path[-1])
