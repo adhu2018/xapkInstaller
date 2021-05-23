@@ -195,10 +195,6 @@ def install_xapk(file_path):
 
 def dump(file_path):
     _, name_suffix = os.path.split(file_path)
-    if " " in name_suffix:
-        copy = ["copy", name_suffix, name_suffix.replace(" ", "")]
-        subprocess.run(copy, shell=True)
-        name_suffix = copy[2]
     cmd = ["aapt", "dump", "badging", name_suffix]
     run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.stderr: print(tostr(run.stderr))
