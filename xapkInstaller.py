@@ -54,8 +54,6 @@ def check(root, del_path):
     elif devices==1: return
     elif devices>1: print("安装失败：设备过多！暂不支持多设备情况下进行安装！")
     
-    os.chdir(root)
-    for i in del_path: delPath(i)
     sys.exit(1)
 
 def delPath(path):
@@ -228,9 +226,8 @@ def main(root, one):
     else:
         shutil.copytree(copy[0], copy[1])
     
-    check(root, del_path)
-    
     try:
+        check(root, del_path)
         if copy[1].endswith(".apk"):
             if not install_apk(copy[1], del_path)[0]: sys.exit(1)
         elif copy[1].endswith(".xapk"):
