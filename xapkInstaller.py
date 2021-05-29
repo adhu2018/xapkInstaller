@@ -132,8 +132,15 @@ def install_apk(file_path, del_path, abc="-rtd"):
     
     install = ["adb", "install", abc, name_suffix]
     status = subprocess.call(install, shell=True)
-    if status:  # No argument expected after "-rtd"
-        install_apk(file_path, del_path, "-r")
+    if status:
+        # No argument expected after "-rtd"
+        if abc=="-rtd": return install_apk(file_path, del_path, "-r")
+        elif abc=="-r":
+            uninstall = ["adb", "shell", "pm", "uninstall", "-k", manifest["package_name"]]
+            subprocess.run(uninstall, shell=True)
+            return install_apk(file_path, del_path, "")
+        else:
+            sys.exit(1)
     return install, status
 
 def install_apks(file_path):
