@@ -99,7 +99,7 @@ def dump_py(file_path, del_path):
         pass
     return manifest
 
-def install_apk(file_path, del_path, abc="-rtd", ):
+def install_apk(file_path, del_path, abc="-rtd"):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
