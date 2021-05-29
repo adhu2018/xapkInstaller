@@ -49,12 +49,10 @@ def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     devices = len(tostr(run.stdout).strip().split("\n")[1:])
     
-    if run.returncode: print(run.stderr)
-    elif devices==0: print("安装失败：手机未连接电脑！")
+    if run.returncode: sys.exit(run.stderr)
+    elif devices==0: sys.exit("安装失败：手机未连接电脑！")
     elif devices==1: return
-    elif devices>1: print("安装失败：设备过多！暂不支持多设备情况下进行安装！")
-    
-    sys.exit(1)
+    elif devices>1: sys.exit("安装失败：设备过多！暂不支持多设备情况下进行安装！")
 
 def delPath(path):
     if not os.path.exists(path): return
@@ -106,8 +104,7 @@ def install_apk(file_path, del_path, abc="-rtd"):
     
     device = Device()
     if device.sdk < manifest["min_sdk_version"]:
-        print("安装失败：安卓版本过低！")
-        sys.exit(1)
+        sys.exit("安装失败：安卓版本过低！")
     
     try:
         if device.sdk > manifest["target_sdk_version"]:
@@ -123,8 +120,7 @@ def install_apk(file_path, del_path, abc="-rtd"):
                 if i in native_code: return True
             return False
         if manifest.get("native_code") and not findabi(manifest["native_code"]):
-            print(f"安装失败：{manifest['native_code']}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
-            sys.exit(1)
+            sys.exit(f"安装失败：{manifest['native_code']}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
     except UnboundLocalError:
         pass
     
@@ -144,22 +140,20 @@ def install_apk(file_path, del_path, abc="-rtd"):
 def install_apks(file_path):
     # java -jar bundletool.jar install-apks --apks=test.apks
     # https://github.com/google/bundletool/releases
-    print("安装失败：apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
+    sys.exit("安装失败：apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
 
 def install_xapk(file_path, del_path):
     """安装xapk文件"""
     os.chdir(file_path)
     if not os.path.isfile("manifest.json"):
-        print(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
-        sys.exit(1)
+        sys.exit(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
     manifest = read_manifest("manifest.json")
     if manifest["xapk_version"]==2:
         split_apks = manifest["split_apks"]
         
         device = Device()
         if device.sdk < int(manifest["min_sdk_version"]):
-            print("安装失败：安卓版本过低！")
-            sys.exit(1)
+            sys.exit("安装失败：安卓版本过低！")
         
         if device.sdk > int(manifest["target_sdk_version"]):
             print("警告：安卓版本过高！可能存在兼容性问题！")
@@ -208,7 +202,7 @@ def install_xapk(file_path, del_path):
                 push = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
                 return [install, push], subprocess.call(push, shell=True)
             else:
-                raise Exception("安装失败：未知错误！请提供文件进行适配！")
+                sys.exit(1)
 
 def main(root, one):
     _, name_suffix = os.path.split(one)
@@ -236,11 +230,9 @@ def main(root, one):
         elif copy[1].endswith(".apks"):
             install_apks(copy[1])
         elif copy[1].endswith(".aab"):
-            print("生成apks文件比较麻烦，暂时不考虑适配！")
-            sys.exit(1)
+            sys.exit("生成apks文件比较麻烦，暂时不考虑适配！")
         elif os.path.isfile(copy[1]):
-            print(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
-            sys.exit(1)
+            sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
         
         if os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
@@ -254,10 +246,11 @@ def main(root, one):
                     else:
                         subprocess.run(install, shell=True)
                 else:
-                    print("安装已取消！")
-                    sys.exit(1)
+                    sys.exit("用户取消安装！")
         return True
-    except SystemExit:
+    except SystemExit as err:
+        if err.code==1: print("错误    安装失败：未知错误！请提供文件进行适配！")
+        else: print(f"错误    {err.code}")
         return False
     except Exception:
         traceback.print_exc(limit=2, file=sys.stdout)
@@ -282,8 +275,7 @@ def md5(*_str):
         m.update(t)
         return m.hexdigest()
     else:
-        print("缺少参数！")
-        return False
+        sys.exit("缺少参数！")
 
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f:
