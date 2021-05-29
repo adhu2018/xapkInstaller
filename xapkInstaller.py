@@ -78,6 +78,7 @@ def dump(file_path, del_path):
         elif "targetSdkVersion:" in line:
             manifest["target_sdk_version"] = int(line.strip().split("'")[1])
         elif "native-code:" in line: manifest["native_code"].append(line.split("'")[1])
+        elif "package: name=" in line: manifest["package_name"] = line.split("'")[1]
     return manifest
 
 def dump_py(file_path, del_path):
@@ -88,6 +89,7 @@ def dump_py(file_path, del_path):
     ap = axmlprinter.AXMLPrinter(data)
     buff = minidom.parseString(ap.getBuff())
     manifest = {}
+    manifest["package_name"] = buff.getElementsByTagName("manifest")[0].getAttribute("package")
     manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
     try:
         manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
