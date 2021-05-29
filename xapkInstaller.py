@@ -290,9 +290,9 @@ def read_manifest(manifest_path):
 
 def uninstall_xapk(file_path):
     package_name = read_manifest("manifest.json")["package_name"]
-    uninstall = ["adb", "uninstall", package_name]
+    # uninstall = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
-    # uninstall = ["adb", "shell", "pm", "uninstall", "-k", package_name]
+    uninstall = ["adb", "shell", "pm", "uninstall", "-k", package_name]
     return subprocess.run(uninstall, shell=True)
 
 def unpack(file_path):
