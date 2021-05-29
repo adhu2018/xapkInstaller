@@ -77,7 +77,7 @@ def dump(file_path, del_path):
             manifest["min_sdk_version"] = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line:
             manifest["target_sdk_version"] = int(line.strip().split("'")[1])
-        elif "native-code:" in line: manifest["native_code"].append(line)
+        elif "native-code:" in line: manifest["native_code"].append(line.split("'")[1])
     return manifest
 
 def dump_py(file_path, del_path):
