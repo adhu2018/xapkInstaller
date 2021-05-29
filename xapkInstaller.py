@@ -71,12 +71,13 @@ def dump(file_path, del_path):
     if run.stdout: print(tostr(run.stdout))
     if run.returncode: return dump_py(file_path, del_path)
     manifest = {}
+    manifest["native_code"] = []
     for line in tostr(run.stdout).split("\n"):
         if "sdkVersion:" in line:
             manifest["min_sdk_version"] = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line:
             manifest["target_sdk_version"] = int(line.strip().split("'")[1])
-        elif "native-code:" in line: manifest["native_code"] = line
+        elif "native-code:" in line: manifest["native_code"].append(line)
     return manifest
 
 def dump_py(file_path, del_path):
