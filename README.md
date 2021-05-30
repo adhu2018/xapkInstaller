@@ -11,3 +11,7 @@ pyinstaller -F xapkInstaller.py -n xapkInstaller4win.exe
 - 命令行：xapkInstaller后添加需要安装的文件（夹），添加多个时使用空格隔开。
 
 文件夹指xapk的解压文件夹。
+
+经过将近一个月的迭代更新，现已支持各种常见的安装包格式(`aab`, `apk`, `apks`, `xapk`)！
+
+如果你有见过其他格式的安装包或者在使用过程中出现了问题，请[提交issues](https://github.com/adhu2018/xapkInstaller/issues/new)。
