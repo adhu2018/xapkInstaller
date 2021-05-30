@@ -107,6 +107,13 @@ def install_aab(file_path, del_path):
         delPath(del_path[-1])
     build = ["java", "-jar", "bundletool.jar", "build-apks",\
         "--connected-device", "--bundle="+name_suffix, "--output="+del_path[-1]]
+    sign = {}
+    sign["ks"] = ""  # `/path/to/keystore.jks`
+    sign["ks-pass"] = ""  # `pass:password` or `file:/path/to/keystore.pwd`
+    sign["ks-key-alias"] = ""  # `alias`
+    sign["key-pass"] = ""  # `pass:password` or `file:/path/to/key.pwd`
+    if sign["ks"] and sign["ks-pass"] and sign["ks-key-alias"] and sign["key-pass"]:
+        for i in sign: build.append(f"--{i}={sign[i]}")
     status = subprocess.call(build, shell=True)
     if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
