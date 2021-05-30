@@ -98,6 +98,8 @@ def dump_py(file_path, del_path):
     return manifest
 
 def install_aab(file_path, del_path):
+    """正式版是需要签名的，配置起来比较麻烦，这里只能安装debug版的"""
+    print(install_aab.__doc__)
     _, name_suffix = os.path.split(file_path)
     name = name_suffix.rsplit(".", 1)[0]
     del_path.append(name+".apks")
