@@ -97,6 +97,17 @@ def dump_py(file_path, del_path):
         pass
     return manifest
 
+def install_aab(file_path, del_path):
+    _, name_suffix = os.path.split(file_path)
+    name = name_suffix.rsplit(".", 1)[0]
+    del_path.append(name+".apks")
+    if os.path.exists(del_path[-1]):
+        delPath(del_path[-1])
+    build = ["java", "-jar", "bundletool.jar", "build-apks",\
+        "--connected-device", "--bundle="+name_suffix, "--output="+del_path[-1]]
+    subprocess.call(build, shell=True)
+    return install_apks(del_path[-1])
+
 def install_apk(file_path, del_path, abc="-rtd"):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
@@ -233,7 +244,7 @@ def main(root, one):
         elif copy[1].endswith(".apks"):
             install_apks(copy[1])
         elif copy[1].endswith(".aab"):
-            sys.exit("生成apks文件比较麻烦，暂时不考虑适配！")
+            install_aab(copy[1], del_path)
         elif os.path.isfile(copy[1]):
             sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
         
