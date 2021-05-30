@@ -105,7 +105,8 @@ def install_aab(file_path, del_path):
         delPath(del_path[-1])
     build = ["java", "-jar", "bundletool.jar", "build-apks",\
         "--connected-device", "--bundle="+name_suffix, "--output="+del_path[-1]]
-    subprocess.call(build, shell=True)
+    status = subprocess.call(build, shell=True)
+    if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
 
 def install_apk(file_path, del_path, abc="-rtd"):
@@ -149,11 +150,10 @@ def install_apk(file_path, del_path, abc="-rtd"):
     return install, status
 
 def install_apks(file_path):
-    # https://github.com/google/bundletool/releases
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
     status = subprocess.call(install, shell=True)
-    if status: sys.exit(1)
+    if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install, status
 
 def install_xapk(file_path, del_path):
