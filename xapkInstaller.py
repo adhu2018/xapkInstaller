@@ -138,9 +138,12 @@ def install_apk(file_path, del_path, abc="-rtd"):
     return install, status
 
 def install_apks(file_path):
-    # java -jar bundletool.jar install-apks --apks=test.apks
     # https://github.com/google/bundletool/releases
-    sys.exit("安装失败：apks因为没有遇到过，暂时没有适配，请提供文件进行适配！")
+    _, name_suffix = os.path.split(file_path)
+    install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
+    status = subprocess.call(install, shell=True)
+    if status: sys.exit(1)
+    return install, status
 
 def install_xapk(file_path, del_path):
     """安装xapk文件"""
