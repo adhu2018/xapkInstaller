@@ -265,19 +265,18 @@ def main(root, one):
         for i in del_path: delPath(i)
 
 def md5(*_str):
-    if len(_str) > 0:
-        t = _str[0]
-        if type(t) is not str: t = str(t)
-        encode_type = "utf-8"
-        if len(_str) > 1: encode_type = _str[1]
-        m = hashlib.md5()
-        try:
-            t = t.encode(encode_type)
-        except LookupError:
-            t = t.encode("utf-8")
-        m.update(t)
-        return m.hexdigest()
-    else: sys.exit("缺少参数！")
+    if len(_str) <= 0: sys.exit("缺少参数！")
+    t = _str[0]
+    if type(t) is not str: t = str(t)
+    encode_type = "utf-8"
+    if len(_str) > 1: encode_type = _str[1]
+    m = hashlib.md5()
+    try:
+        t = t.encode(encode_type)
+    except LookupError:
+        t = t.encode("utf-8")
+    m.update(t)
+    return m.hexdigest()
 
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f:
