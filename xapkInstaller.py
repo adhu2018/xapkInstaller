@@ -222,8 +222,7 @@ def main(root, one):
     _, name_suffix = os.path.split(one)
     name_suffix = name_suffix.rsplit(".", 1)
     new_path = md5(name_suffix[0])
-    if len(name_suffix)>1:
-        new_path += f".{name_suffix[1]}"
+    if len(name_suffix)>1: new_path += f".{name_suffix[1]}"
     del_path = [os.path.join(root, new_path)]
     copy = [one, del_path[0]]
     print(f"正在复制 `{one}` 到 `{del_path[0]}`")
