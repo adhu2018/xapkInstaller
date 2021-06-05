@@ -2,6 +2,11 @@
 # Python 自带
 import hashlib, json, os, shutil, subprocess, sys, traceback
 import xml.dom.minidom as minidom
+# 第三方替代
+try:
+    import regex as re
+except ImportError:
+    import re
 # 第三方
 import chardet
 from axmlparserpy import axmlprinter
@@ -67,7 +72,7 @@ def dump(file_path, del_path):
     for line in tostr(run.stdout).split("\n"):
         if "sdkVersion:" in line: manifest["min_sdk_version"] = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line: manifest["target_sdk_version"] = int(line.strip().split("'")[1])
-        elif "native-code:" in line: manifest["native_code"].append(line.split("'")[1])
+        elif "native-code:" in line: manifest["native_code"].extend(re.findall(r"'([^,']+)'",line))
         elif "package: name=" in line: manifest["package_name"] = line.split("'")[1]
     return manifest
 
