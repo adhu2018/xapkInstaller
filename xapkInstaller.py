@@ -278,6 +278,21 @@ def md5(*_str):
     m.update(t)
     return m.hexdigest()
 
+def pull_apk(root, package):
+    cmd = ["adb", "shell", "pm", "path", package]
+    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if run.stderr: print(tostr(run.stderr))
+    if run.returncode: return False
+    else:
+        dir_path = os.path.join(root, package)
+        if os.path.exists(dir_path): delPath(dir_path)
+        os.mkdir(dir_path)
+        for i in tostr(run.stdout).strip().split("\n"):
+            cmd = ["adb", "pull", i[8:], dir_path]
+            run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if run.returncode: return False
+        return dir_path
+
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f:
         data = f.read()
