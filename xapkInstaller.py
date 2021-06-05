@@ -212,14 +212,14 @@ def install_xapk(file_path, del_path, root):
                 break
         if config.get("locale"): install.append(config["locale"])
         
-        return install, subprocess.call(install, shell=True)
+        return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     elif manifest["xapk_version"]==1:
         install, _ = install_apk(manifest["package_name"]+".apk", del_path, root)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
                 push = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
-                return [install, push], subprocess.call(push, shell=True)
+                return [install, push], subprocess.run(push, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             else: sys.exit(1)
 
 def main(root, one):
@@ -247,8 +247,8 @@ def main(root, one):
         
         if os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
-            install, status = install_xapk(del_path[-1], del_path, root)
-            if status:
+            install, run = install_xapk(del_path[-1], del_path, root)
+            if run.returncode:
                 if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
                     package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                     uninstall(package_name, root)
