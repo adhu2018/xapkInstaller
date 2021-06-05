@@ -62,14 +62,12 @@ def delPath(path):
     return shutil.rmtree(path)
 
 def dump(file_path, del_path):
-    cmd = ["aapt", "dump", "badging", file_path]
-    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if run.stderr: print(tostr(run.stderr))
-    if run.stdout: print(tostr(run.stdout))
+    run, msg = run_msg(["aapt", "dump", "badging", file_path])
+    print(msg)
     if run.returncode: return dump_py(file_path, del_path)
     manifest = {}
     manifest["native_code"] = []
-    for line in tostr(run.stdout).split("\n"):
+    for line in msg.split("\n"):
         if "sdkVersion:" in line: manifest["min_sdk_version"] = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line: manifest["target_sdk_version"] = int(line.strip().split("'")[1])
         elif "native-code:" in line: manifest["native_code"].extend(re.findall(r"'([^,']+)'",line))
@@ -297,24 +295,30 @@ def md5(*_str):
     return m.hexdigest()
 
 def pull_apk(root, package):
-    cmd = ["adb", "shell", "pm", "path", package]
-    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if run.stderr: print(tostr(run.stderr))
-    if run.returncode: return False
+    run, msg = run_msg(["adb", "shell", "pm", "path", package])
+    if run.returncode: sys.exit(msg)
     else:
         dir_path = os.path.join(root, package)
         if os.path.exists(dir_path): delPath(dir_path)
         os.mkdir(dir_path)
         for i in tostr(run.stdout).strip().split("\n"):
-            cmd = ["adb", "pull", i[8:], dir_path]
-            run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if run.returncode: return False
+            run, msg = run_msg(["adb", "pull", i[8:], dir_path])
+            if run.returncode: sys.exit(msg)
+        cmd = ["adb", "pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
+        run, msg = run_msg(cmd)
+        if run.returncode and "No such file or directory" not in msg: sys.exit(msg)
         return dir_path
 
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f:
         data = f.read()
     return json.loads(tostr(data))
+
+def run_msg(cmd):
+    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if run.stderr: return run, tostr(run.stderr)
+    if run.stdout: return run, tostr(run.stdout)
+    return run, ""
 
 def uninstall(package_name, root):
     # todo 安装失败后自动重装旧版本
