@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-import chardet
-import hashlib
-import json
-import os
-import shutil
-import subprocess
-import sys
-import traceback
+# Python 自带
+import hashlib, json, os, shutil, subprocess, sys, traceback
 import xml.dom.minidom as minidom
+# 第三方
+import chardet
 from axmlparserpy import axmlprinter
 
 
