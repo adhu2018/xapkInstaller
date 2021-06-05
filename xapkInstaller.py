@@ -36,14 +36,11 @@ class Device:
         return self._sdk
     
     def getsdk(self):
-        self._sdk = os.popen("adb shell getprop ro.build.version.sdk").read().strip()
-        if not self._sdk:
-            self._sdk = os.popen("adb shell getprop ro.product.build.version.sdk").read().strip()
-        if not self._sdk:
-            self._sdk = os.popen("adb shell getprop ro.system.build.version.sdk").read().strip()
-        if not self._sdk:
-            self._sdk = os.popen("adb shell getprop ro.system_ext.build.version.sdk").read().strip()
-        self._sdk = int(self._sdk)
+        _sdk = os.popen("adb shell getprop ro.build.version.sdk").read().strip()
+        if not _sdk: _sdk = os.popen("adb shell getprop ro.product.build.version.sdk").read().strip()
+        if not _sdk: _sdk = os.popen("adb shell getprop ro.system.build.version.sdk").read().strip()
+        if not _sdk: _sdk = os.popen("adb shell getprop ro.system_ext.build.version.sdk").read().strip()
+        self._sdk = int(_sdk)
         return self._sdk
 
 def check(root, del_path):
@@ -63,7 +60,7 @@ def delPath(path):
 
 def dump(file_path, del_path):
     run, msg = run_msg(["aapt", "dump", "badging", file_path])
-    print(msg)
+    if msg: print(msg)
     if run.returncode: return dump_py(file_path, del_path)
     manifest = {}
     manifest["native_code"] = []
@@ -75,10 +72,8 @@ def dump(file_path, del_path):
     return manifest
 
 def dump_py(file_path, del_path):
-    unpack_path = unpack(file_path)
-    del_path.append(unpack_path)
-    with open(os.path.join(unpack_path, "AndroidManifest.xml"), "rb") as f:
-        data = f.read()
+    del_path.append(unpack(file_path))
+    with open(os.path.join(del_path[-1], "AndroidManifest.xml"), "rb") as f: data = f.read()
     ap = axmlprinter.AXMLPrinter(data)
     buff = minidom.parseString(ap.getBuff())
     manifest = {}
@@ -89,7 +84,7 @@ def dump_py(file_path, del_path):
     except:
         pass
     try:
-        manifest["native_code"] = os.listdir(os.path.join(unpack_path, "lib"))
+        manifest["native_code"] = os.listdir(os.path.join(del_path[-1], "lib"))
     except:
         pass
     return manifest
@@ -172,12 +167,8 @@ def install_xapk(file_path, del_path, root):
         split_apks = manifest["split_apks"]
         
         device = Device()
-        if device.sdk < int(manifest["min_sdk_version"]):
-            sys.exit("安装失败：安卓版本过低！")
-        
-        if device.sdk > int(manifest["target_sdk_version"]):
-            print("警告：安卓版本过高！可能存在兼容性问题！")
-            # return None, 0
+        if device.sdk < int(manifest["min_sdk_version"]): sys.exit("安装失败：安卓版本过低！")
+        if device.sdk > int(manifest["target_sdk_version"]): print("警告：安卓版本过高！可能存在兼容性问题！")
         
         install = ["adb", "install-multiple", "-rtd"]
         other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
@@ -201,17 +192,12 @@ def install_xapk(file_path, del_path, root):
             elif i["id"] in other: pass
             else: install.append(i["file"])
         
-        if config.get("abi"):
-            install.append(config["abi"])
+        if config.get("abi"): install.append(config["abi"])
         else:
             for i in device.abilist:
-                if config.get(i):
-                    install.append(config[i])
-                    break
+                if config.get(i): install.append(config[i]); break
         for i in ["xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
-            if config.get(i):
-                install.append(config[i])
-                break
+            if config.get(i): install.append(config[i]); break
         if config.get("locale"): install.append(config["locale"])
         
         return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -310,8 +296,7 @@ def pull_apk(root, package):
         return dir_path
 
 def read_manifest(manifest_path):
-    with open(manifest_path, "rb") as f:
-        data = f.read()
+    with open(manifest_path, "rb") as f: data = f.read()
     return json.loads(tostr(data))
 
 def run_msg(cmd):
