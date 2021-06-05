@@ -142,8 +142,7 @@ def install_apk(file_path, del_path, abc="-rtd"):
         # No argument expected after "-rtd"
         if abc=="-rtd": return install_apk(file_path, del_path, "-r")
         elif abc=="-r":
-            uninstall = ["adb", "shell", "pm", "uninstall", "-k", manifest["package_name"]]
-            subprocess.run(uninstall, shell=True)
+            uninstall(manifest["package_name"])
             return install_apk(file_path, del_path, "")
         else:
             sys.exit(1)
@@ -246,7 +245,8 @@ def main(root, one):
             install, status = install_xapk(del_path[-1], del_path)
             if status:
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
-                    uninstall_xapk(del_path[-1])
+                    package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
+                    uninstall(package_name)
                     if len(install)==2:
                         subprocess.run(install[0], shell=True)
                         subprocess.run(install[1], shell=True)
@@ -283,8 +283,7 @@ def read_manifest(manifest_path):
         data = f.read()
     return json.loads(tostr(data))
 
-def uninstall_xapk(file_path):
-    package_name = read_manifest("manifest.json")["package_name"]
+def uninstall(package_name):
     # uninstall = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     uninstall = ["adb", "shell", "pm", "uninstall", "-k", package_name]
