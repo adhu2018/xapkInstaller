@@ -65,10 +65,8 @@ def dump(file_path, del_path):
     manifest = {}
     manifest["native_code"] = []
     for line in tostr(run.stdout).split("\n"):
-        if "sdkVersion:" in line:
-            manifest["min_sdk_version"] = int(line.strip().split("'")[1])
-        elif "targetSdkVersion:" in line:
-            manifest["target_sdk_version"] = int(line.strip().split("'")[1])
+        if "sdkVersion:" in line: manifest["min_sdk_version"] = int(line.strip().split("'")[1])
+        elif "targetSdkVersion:" in line: manifest["target_sdk_version"] = int(line.strip().split("'")[1])
         elif "native-code:" in line: manifest["native_code"].append(line.split("'")[1])
         elif "package: name=" in line: manifest["package_name"] = line.split("'")[1]
     return manifest
@@ -99,8 +97,7 @@ def install_aab(file_path, del_path):
     _, name_suffix = os.path.split(file_path)
     name = name_suffix.rsplit(".", 1)[0]
     del_path.append(name+".apks")
-    if os.path.exists(del_path[-1]):
-        delPath(del_path[-1])
+    if os.path.exists(del_path[-1]): delPath(del_path[-1])
     build = ["java", "-jar", "bundletool.jar", "build-apks",\
         "--connected-device", "--bundle="+name_suffix, "--output="+del_path[-1]]
     sign = {}
@@ -120,12 +117,10 @@ def install_apk(file_path, del_path, abc="-rtd"):
     manifest = dump(name_suffix, del_path)
     
     device = Device()
-    if device.sdk < manifest["min_sdk_version"]:
-        sys.exit("安装失败：安卓版本过低！")
+    if device.sdk < manifest["min_sdk_version"]: sys.exit("安装失败：安卓版本过低！")
     
     try:
-        if device.sdk > manifest["target_sdk_version"]:
-            print("警告：安卓版本过高！可能存在兼容性问题！")
+        if device.sdk > manifest["target_sdk_version"]: print("警告：安卓版本过高！可能存在兼容性问题！")
     except:
         pass
     
@@ -220,8 +215,7 @@ def install_xapk(file_path, del_path):
             if i["install_location"]=="EXTERNAL_STORAGE":
                 push = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
                 return [install, push], subprocess.call(push, shell=True)
-            else:
-                sys.exit(1)
+            else: sys.exit(1)
 
 def main(root, one):
     _, name_suffix = os.path.split(one)
@@ -232,12 +226,9 @@ def main(root, one):
     del_path = [os.path.join(root, new_path)]
     copy = [one, del_path[0]]
     print(f"正在复制 `{one}` 到 `{del_path[0]}`")
-    if os.path.exists(copy[1]):
-        delPath(copy[1])
-    if os.path.isfile(copy[0]):
-        shutil.copyfile(copy[0], copy[1])
-    else:
-        shutil.copytree(copy[0], copy[1])
+    if os.path.exists(copy[1]): delPath(copy[1])
+    if os.path.isfile(copy[0]): shutil.copyfile(copy[0], copy[1])
+    else: shutil.copytree(copy[0], copy[1])
     
     try:
         check(root, del_path)
@@ -246,12 +237,9 @@ def main(root, one):
         elif copy[1].endswith(".xapk"):
             del_path.append(unpack(copy[1]))
             os.chdir(del_path[-1])
-        elif copy[1].endswith(".apks"):
-            install_apks(copy[1])
-        elif copy[1].endswith(".aab"):
-            install_aab(copy[1], del_path)
-        elif os.path.isfile(copy[1]):
-            sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
+        elif copy[1].endswith(".apks"): install_apks(copy[1])
+        elif copy[1].endswith(".aab"): install_aab(copy[1], del_path)
+        elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
         
         if os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
@@ -262,10 +250,8 @@ def main(root, one):
                     if len(install)==2:
                         subprocess.run(install[0], shell=True)
                         subprocess.run(install[1], shell=True)
-                    else:
-                        subprocess.run(install, shell=True)
-                else:
-                    sys.exit("用户取消安装！")
+                    else: subprocess.run(install, shell=True)
+                else: sys.exit("用户取消安装！")
         return True
     except SystemExit as err:
         if err.code==1: print("错误    安装失败：未知错误！请提供文件进行适配！")
@@ -281,11 +267,9 @@ def main(root, one):
 def md5(*_str):
     if len(_str) > 0:
         t = _str[0]
-        if type(t) is not str:
-            t = str(t)
+        if type(t) is not str: t = str(t)
         encode_type = "utf-8"
-        if len(_str) > 1:
-            encode_type = _str[1]
+        if len(_str) > 1: encode_type = _str[1]
         m = hashlib.md5()
         try:
             t = t.encode(encode_type)
@@ -293,8 +277,7 @@ def md5(*_str):
             t = t.encode("utf-8")
         m.update(t)
         return m.hexdigest()
-    else:
-        sys.exit("缺少参数！")
+    else: sys.exit("缺少参数！")
 
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f:
