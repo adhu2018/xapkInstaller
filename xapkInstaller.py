@@ -181,6 +181,7 @@ def install_xapk(file_path, del_path):
         other = ["extra_icu", "feedv2", "vr"]  # Google Chrome
         
         config = {}
+        # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
         for i in split_apks:
             if i["id"]==f"config.{device.abi.replace('-', '_')}": config["abi"] = i["file"]
             elif i["id"]==f"config.{device.locale.split('-')[0]}": config["locale"] = i["file"]
