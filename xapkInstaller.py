@@ -244,7 +244,7 @@ def main(root, one):
             os.chdir(del_path[-1])
             install, status = install_xapk(del_path[-1], del_path, root)
             if status:
-                if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
+                if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
                     package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                     uninstall(package_name, root)
                     if len(install)==2:
