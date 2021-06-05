@@ -249,6 +249,9 @@ def main(root, one):
             os.chdir(del_path[-1])
             install, run = install_xapk(del_path[-1], del_path, root)
             if run.returncode:
+                err = tostr(run.stderr)
+                if "INSTALL_FAILED_VERSION_DOWNGRADE" in err: print("警告：降级安装？请确保文件无误！")
+                else: print(err)
                 if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
                     package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                     uninstall(package_name, root)
