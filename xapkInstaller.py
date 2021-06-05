@@ -111,7 +111,7 @@ def install_aab(file_path, del_path):
     if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
 
-def install_apk(file_path, del_path, abc="-rtd"):
+def install_apk(file_path, del_path, root, abc="-rtd"):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
@@ -140,10 +140,10 @@ def install_apk(file_path, del_path, abc="-rtd"):
     status = subprocess.call(install, shell=True)
     if status:
         # No argument expected after "-rtd"
-        if abc=="-rtd": return install_apk(file_path, del_path, "-r")
+        if abc=="-rtd": return install_apk(file_path, del_path, root, "-r")
         elif abc=="-r":
-            uninstall(manifest["package_name"])
-            return install_apk(file_path, del_path, "")
+            uninstall(manifest["package_name"], root)
+            return install_apk(file_path, del_path, root, "")
         else:
             sys.exit(1)
     return install, status
@@ -155,7 +155,7 @@ def install_apks(file_path):
     if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install, status
 
-def install_xapk(file_path, del_path):
+def install_xapk(file_path, del_path, root):
     """安装xapk文件"""
     os.chdir(file_path)
     if not os.path.isfile("manifest.json"):
@@ -209,7 +209,7 @@ def install_xapk(file_path, del_path):
         
         return install, subprocess.call(install, shell=True)
     elif manifest["xapk_version"]==1:
-        install, _ = install_apk(manifest["package_name"]+".apk", del_path)
+        install, _ = install_apk(manifest["package_name"]+".apk", del_path, root)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
@@ -232,7 +232,7 @@ def main(root, one):
     try:
         check(root, del_path)
         if copy[1].endswith(".apk"):
-            if not install_apk(copy[1], del_path)[0]: sys.exit(1)
+            if not install_apk(copy[1], del_path, root)[0]: sys.exit(1)
         elif copy[1].endswith(".xapk"):
             del_path.append(unpack(copy[1]))
             os.chdir(del_path[-1])
@@ -242,11 +242,11 @@ def main(root, one):
         
         if os.path.isdir(del_path[-1]):
             os.chdir(del_path[-1])
-            install, status = install_xapk(del_path[-1], del_path)
+            install, status = install_xapk(del_path[-1], del_path, root)
             if status:
                 if input("安装失败！将尝试卸载后再安装，会导致数据丢失！是否继续？(yes/no)").lower()=="yes":
                     package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
-                    uninstall(package_name)
+                    uninstall(package_name, root)
                     if len(install)==2:
                         subprocess.run(install[0], shell=True)
                         subprocess.run(install[1], shell=True)
@@ -298,7 +298,8 @@ def read_manifest(manifest_path):
         data = f.read()
     return json.loads(tostr(data))
 
-def uninstall(package_name):
+def uninstall(package_name, root):
+    if not pull_apk(package_name, root): return False
     # uninstall = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     uninstall = ["adb", "shell", "pm", "uninstall", "-k", package_name]
