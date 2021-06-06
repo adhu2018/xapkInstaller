@@ -48,6 +48,8 @@ def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     devices = len(tostr(run.stdout).strip().split("\n")[1:])
     
+    # todo 多设备安装
+    # adb -s <device-id/ip:port> shell xxx
     if run.returncode: sys.exit(run.stderr)
     elif devices==0: sys.exit("安装失败：手机未连接电脑！")
     elif devices==1: return
