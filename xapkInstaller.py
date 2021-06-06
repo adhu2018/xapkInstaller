@@ -48,7 +48,7 @@ def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     devices = len(tostr(run.stdout).strip().split("\n")[1:])
     
-    # todo 多设备安装
+    # TODO 多设备安装
     # adb -s <device-id/ip:port> shell xxx
     if run.returncode: sys.exit(run.stderr)
     elif devices==0: sys.exit("安装失败：手机未连接电脑！")
@@ -309,7 +309,7 @@ def run_msg(cmd):
     return run, ""
 
 def uninstall(package_name, root):
-    # todo 安装失败后自动重装旧版本
+    # TODO 安装失败后自动重装旧版本
     if not pull_apk(package_name, root): return False
     # cmd = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
