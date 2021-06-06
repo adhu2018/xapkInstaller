@@ -14,7 +14,7 @@
 
 使用以下语句进行编译：  
 ```powershell
-pyinstaller -F xapkInstaller.py -n xapkInstaller4win.exe
+pyinstaller -F xapkInstaller.py -n xapkInstaller4win
 ```
 或下载已编译好的[最新版本](https://github.com/adhu2018/xapkInstaller/releases/latest)。  
 
