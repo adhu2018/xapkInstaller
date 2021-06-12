@@ -166,7 +166,7 @@ def install_xapk(file_path, del_path, root):
     if not os.path.isfile("manifest.json"):
         sys.exit(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
     manifest = read_manifest("manifest.json")
-    if manifest["xapk_version"]==2:
+    if not manifest.get("expansions"):
         split_apks = manifest["split_apks"]
         
         device = Device()
@@ -204,7 +204,7 @@ def install_xapk(file_path, del_path, root):
         if config.get("locale"): install.append(config["locale"])
         
         return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    elif manifest["xapk_version"]==1:
+    else:
         install, _ = install_apk(manifest["package_name"]+".apk", del_path, root)
         expansions = manifest["expansions"]
         for i in expansions:
@@ -242,6 +242,7 @@ def main(root, one):
             if run.returncode:
                 err = tostr(run.stderr)
                 if "INSTALL_FAILED_VERSION_DOWNGRADE" in err: print("警告：降级安装？请确保文件无误！")
+                elif "INSTALL_FAILED_USER_RESTRICTED: Install canceled by user" in err: sys.exit("用户取消安装或未确认安装！初次安装需要手动确认！！")
                 else: print(err)
                 if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
                     package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
