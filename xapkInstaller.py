@@ -75,6 +75,7 @@ def dump(file_path, del_path):
     return manifest
 
 def dump_py(file_path, del_path):
+    print("未配置aapt或aapt存在错误！")
     del_path.append(get_unpack_path(file_path))
     zip_file = zipfile.ZipFile(file_path)
     upfile = "AndroidManifest.xml"
@@ -225,6 +226,7 @@ def install_xapk(file_path, del_path, root):
             else: sys.exit(1)
 
 def main(root, one):
+    os.chdir(root)
     _, name_suffix = os.path.split(one)
     name_suffix = name_suffix.rsplit(".", 1)
     new_path = md5(name_suffix[0])
