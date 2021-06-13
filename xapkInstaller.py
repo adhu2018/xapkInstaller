@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Python 自带
-import hashlib, json, os, shutil, subprocess, sys, traceback
+import hashlib, json, os, shutil, subprocess, sys, traceback, zipfile
 import xml.dom.minidom as minidom
 # 第三方替代
 try:
@@ -75,8 +75,11 @@ def dump(file_path, del_path):
     return manifest
 
 def dump_py(file_path, del_path):
-    del_path.append(unpack(file_path))
-    with open(os.path.join(del_path[-1], "AndroidManifest.xml"), "rb") as f: data = f.read()
+    del_path.append(get_unpack_path(file_path))
+    zip_file = zipfile.ZipFile(file_path)
+    upfile = "AndroidManifest.xml"
+    zip_file.extract(upfile, os.path.join(del_path[-1], upfile)
+    with open(os.path.join(del_path[-1], upfile), "rb") as f: data = f.read()
     ap = axmlprinter.AXMLPrinter(data)
     buff = minidom.parseString(ap.getBuff())
     manifest = {}
@@ -86,11 +89,19 @@ def dump_py(file_path, del_path):
         manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
     except:
         pass
-    try:
-        manifest["native_code"] = os.listdir(os.path.join(del_path[-1], "lib"))
-    except:
-        pass
+    file_list = zip_file.namelist()
+    native_code = []
+    for i in file_list:
+        if i.startswith("lib/"): native_code.append(i.split("/")[1])
+    manifest["native_code"] = list(set(native_code))
     return manifest
+
+def get_unpack_path(file_path):
+    """获取文件解压路径"""
+    dir_path, name_suffix = os.path.split(file_path)
+    name, suffix = os.path.splitext(name_suffix)
+    unpack_path = os.path.join(dir_path, name)
+    return unpack_path
 
 def install_aab(file_path, del_path):
     """正式版是需要签名的，配置起来比较麻烦，这里只能安装debug版的"""
@@ -319,10 +330,8 @@ def uninstall(package_name, root):
 
 def unpack(file_path):
     """解压文件"""
+    unpack_path = get_unpack_path(file_path)
     print("文件越大，解压越慢，请耐心等待...")
-    dir_path, name_suffix = os.path.split(file_path)
-    name, suffix = os.path.splitext(name_suffix)
-    unpack_path = os.path.join(dir_path, name)
     shutil.unpack_archive(file_path, unpack_path, "zip")
     return unpack_path
 
