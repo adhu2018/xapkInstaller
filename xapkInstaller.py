@@ -15,20 +15,21 @@ from axmlparserpy import axmlprinter
 tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
 
 class Device:
-    def __init__(self):
+    def __init__(self, device):
         self._sdk = None
+        self.device = device
     
     @property
     def abi(self):
-        return os.popen("adb shell getprop ro.product.cpu.abi").read().strip()
+        return os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abi").read().strip()
     
     @property
     def abilist(self):
-        return os.popen("adb shell getprop ro.product.cpu.abilist").read().strip().split(",")
+        return os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abilist").read().strip().split(",")
     
     @property
     def locale(self):
-        return os.popen("adb shell getprop ro.product.locale").read().strip()
+        return os.popen(f"adb -s {self.device} shell getprop ro.product.locale").read().strip()
     
     @property
     def sdk(self):
@@ -36,10 +37,10 @@ class Device:
         return self._sdk
     
     def getsdk(self):
-        _sdk = os.popen("adb shell getprop ro.build.version.sdk").read().strip()
-        if not _sdk: _sdk = os.popen("adb shell getprop ro.product.build.version.sdk").read().strip()
-        if not _sdk: _sdk = os.popen("adb shell getprop ro.system.build.version.sdk").read().strip()
-        if not _sdk: _sdk = os.popen("adb shell getprop ro.system_ext.build.version.sdk").read().strip()
+        _sdk = os.popen(f"adb -s {self.device} shell getprop ro.build.version.sdk").read().strip()
+        if not _sdk: _sdk = os.popen(f"adb -s {self.device} shell getprop ro.product.build.version.sdk").read().strip()
+        if not _sdk: _sdk = os.popen(f"adb -s {self.device} shell getprop ro.system.build.version.sdk").read().strip()
+        if not _sdk: _sdk = os.popen(f"adb -s {self.device} shell getprop ro.system_ext.build.version.sdk").read().strip()
         self._sdk = int(_sdk)
         return self._sdk
 
@@ -51,13 +52,11 @@ def check(root, del_path):
         if i.split("\t")[1] != "offline":
             devices.append(i.split("\t")[0])
     
-    # TODO 多设备安装
     # adb -s <device-id/ip:port> shell xxx
     if run.returncode: sys.exit(run.stderr)
     elif len(devices)==0: sys.exit("安装失败：手机未连接电脑！")
     elif len(devices)==1: pass
     elif len(devices)>1:
-        sys.exit("安装失败：设备过多！多设备安装功能正在完善！")
         if not input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() in ["y", "Y"]:
             sys.exit("用户取消安装！")
     return devices
@@ -131,12 +130,12 @@ def install_aab(file_path, del_path):
     if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
 
-def install_apk(file_path, del_path, root, abc="-rtd"):
+def install_apk(device, file_path, del_path, root, abc="-rtd"):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
     
-    device = Device()
+    if type(device) is not Device: device = Device(device)
     if device.sdk < manifest["min_sdk_version"]: sys.exit("安装失败：安卓版本过低！")
     
     try:
@@ -156,14 +155,16 @@ def install_apk(file_path, del_path, root, abc="-rtd"):
     except UnboundLocalError:
         pass
     
-    install = ["adb", "install", abc, name_suffix]
+    install = ["adb", "-s", device.device, "install", abc, name_suffix]
     status = subprocess.call(install, shell=True)
     if status:
-        # No argument expected after "-rtd"
-        if abc=="-rtd": return install_apk(file_path, del_path, root, "-r")
+        if abc=="-rtd":
+            print('No argument expected after "-rtd"')
+            print("正在修改安装参数重新安装，请等待...")
+            return install_apk(device, file_path, del_path, root, "-r")
         elif abc=="-r":
-            pull_path = uninstall(manifest["package_name"], root)
-            install, status = install_apk(file_path, del_path, root, "")
+            pull_path = uninstall(device, manifest["package_name"], root)
+            install, status = install_apk(device, file_path, del_path, root, "")
             if status:
                 msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
                     + f"旧版安装包路径：{pull_path}\n"
@@ -179,20 +180,21 @@ def install_apks(file_path):
     if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install, status
 
-def install_xapk(file_path, del_path, root):
+def install_xapk(device, file_path, del_path, root):
     """安装xapk文件"""
     os.chdir(file_path)
+    print("开始安装...")
     if not os.path.isfile("manifest.json"):
         sys.exit(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
     manifest = read_manifest("manifest.json")
+    if type(device) is not Device: device = Device(device)
     if not manifest.get("expansions"):
         split_apks = manifest["split_apks"]
         
-        device = Device()
         if device.sdk < int(manifest["min_sdk_version"]): sys.exit("安装失败：安卓版本过低！")
         if device.sdk > int(manifest["target_sdk_version"]): print("警告：安卓版本过高！可能存在兼容性问题！")
         
-        install = ["adb", "install-multiple", "-rtd"]
+        install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
         other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
             "config.hi", "config.in", "config.it", "config.ja", "config.ko",
             "config.my", "config.pt", "config.ru", "config.th", "config.tr", 
@@ -221,14 +223,14 @@ def install_xapk(file_path, del_path, root):
         for i in ["xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
             if config.get(i): install.append(config[i]); break
         if config.get("locale"): install.append(config["locale"])
-        
+        print(install)
         return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
-        install, _ = install_apk(manifest["package_name"]+".apk", del_path, root)
+        install, _ = install_apk(device, manifest["package_name"]+".apk", del_path, root)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
-                push = ["adb", "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
+                push = ["adb", "-s", device.device, "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
                 return [install, push], subprocess.run(push, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             else: sys.exit(1)
 
@@ -247,37 +249,39 @@ def main(root, one):
     
     try:
         devices = check(root, del_path)
-        if copy[1].endswith(".apk"):
-            if not install_apk(copy[1], del_path, root)[0]: sys.exit(1)
-        elif copy[1].endswith(".xapk"):
-            del_path.append(unpack(copy[1]))
-            os.chdir(del_path[-1])
-        elif copy[1].endswith(".apks"): install_apks(copy[1])
-        elif copy[1].endswith(".aab"): install_aab(copy[1], del_path)
-        elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
         
-        if os.path.isdir(del_path[-1]):
-            os.chdir(del_path[-1])
-            install, run = install_xapk(del_path[-1], del_path, root)
-            if run.returncode:
-                err = tostr(run.stderr)
-                if "INSTALL_FAILED_VERSION_DOWNGRADE" in err: print("警告：降级安装？请确保文件无误！")
-                elif "INSTALL_FAILED_USER_RESTRICTED: Install canceled by user" in err: sys.exit("用户取消安装或未确认安装！初次安装需要手动确认！！")
-                else: print(err)
-                if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
-                    package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
-                    pull_path = uninstall(package_name, root)
-                    msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
-                        + f"旧版安装包路径：{pull_path}\n"
-                    if len(install)==2:
-                        run = subprocess.run(install[0], shell=True)
-                        if run.returncode: sys.exit(msg)
-                        run = subprocess.run(install[1], shell=True)
-                        if run.returncode: sys.exit(msg)
-                    else:
-                        run = subprocess.run(install, shell=True)
-                        if run.returncode: sys.exit(msg)
-                else: sys.exit("用户取消安装！")
+        for device in devices:
+            if copy[1].endswith(".apk"):
+                if not install_apk(device, copy[1], del_path, root)[0]: sys.exit(1)
+            elif copy[1].endswith(".xapk"):
+                del_path.append(unpack(copy[1]))
+                os.chdir(del_path[-1])
+            elif copy[1].endswith(".apks"): install_apks(copy[1])
+            elif copy[1].endswith(".aab"): install_aab(copy[1], del_path)
+            elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
+            
+            if os.path.isdir(del_path[-1]):
+                os.chdir(del_path[-1])
+                install, run = install_xapk(device, del_path[-1], del_path, root)
+                if run.returncode:
+                    err = tostr(run.stderr)
+                    if "INSTALL_FAILED_VERSION_DOWNGRADE" in err: print("警告：降级安装？请确保文件无误！")
+                    elif "INSTALL_FAILED_USER_RESTRICTED: Install canceled by user" in err: sys.exit("用户取消安装或未确认安装！初次安装需要手动确认！！")
+                    else: print(err)
+                    if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
+                        package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
+                        pull_path = uninstall(device, package_name, root)
+                        msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
+                            + f"旧版安装包路径：{pull_path}\n"
+                        if len(install)==2:
+                            run = subprocess.run(install[0], shell=True)
+                            if run.returncode: sys.exit(msg)
+                            run = subprocess.run(install[1], shell=True)
+                            if run.returncode: sys.exit(msg)
+                        else:
+                            run = subprocess.run(install, shell=True)
+                            if run.returncode: sys.exit(msg)
+                    else: sys.exit("用户取消安装！")
         return True
     except SystemExit as err:
         if err.code==1: print("错误    安装失败：未知错误！请提供文件进行适配！")
@@ -304,26 +308,33 @@ def md5(*_str):
     m.update(t)
     return m.hexdigest()
 
-def pull_apk(package, root):
-    run, msg = run_msg(["adb", "shell", "pm", "path", package])
+def pull_apk(device, package, root):
+    print("正在备份安装包...")
+    if type(device) is not str: device = device.device
+    run, msg = run_msg(["adb", "-s", device, "shell", "pm", "path", package])
     if run.returncode: sys.exit(msg)
     else:
         dir_path = os.path.join(root, package)
         if os.path.exists(dir_path): delPath(dir_path)
         os.mkdir(dir_path)
-        for i in tostr(run.stdout).strip().split("\n"):
-            run, msg = run_msg(["adb", "pull", i[8:], dir_path])
-            if run.returncode: sys.exit(msg)
-        cmd = ["adb", "pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
+        try:
+            for i in tostr(run.stdout).strip().split("\n"):
+                run, msg = run_msg(["adb", "-s", device, "pull", i[8:].strip(), dir_path])
+                if run.returncode: sys.exit(msg)
+        except TypeError:
+            sys.exit(1)
+        cmd = ["adb", "-s", device, "pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
         run, msg = run_msg(cmd)
-        if run.returncode and "No such file or directory" not in msg: sys.exit(msg)
+        if run.returncode and "No such file or directory" not in msg and "does not exist" not in msg: sys.exit(msg)
         return dir_path
 
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f: data = f.read()
     return json.loads(tostr(data))
 
-def restore(dir_path):
+def restore(device, dir_path):
+    print("开始恢复...")
+    if type(device) is not str: device = device.device
     os.chdir(dir_path)
     all = os.listdir(dir_path)
     obb = False
@@ -333,32 +344,34 @@ def restore(dir_path):
             break
     if obb:
         for i in all:
-            if i.endswith(".apk"): install_apk(os.path.join(dir_path, i))
+            if i.endswith(".apk"): install_apk(device, os.path.join(dir_path, i))
             elif i.endswith(".obb"):
-                push = ["adb", "push", os.path.join(dir_path, i), \
+                push = ["adb", "-s", device, "push", os.path.join(dir_path, i), \
                 "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
                 subprocess.run(pull, shell=True)
     else:
-        install = ["adb", "install-multiple", "-rtd"]
+        install = ["adb", "-s", device, "install-multiple", "-rtd"]
         install.extend(all)
         subprocess.run(install, shell=True)
     os.chdir(root)
     
 def run_msg(cmd):
+    print(cmd)
     run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.stderr: return run, tostr(run.stderr)
     if run.stdout: return run, tostr(run.stdout)
     return run, ""
 
-def uninstall(package_name, root):
-    dir_path = pull_apk(package_name, root)
+def uninstall(device, package_name, root):
+    if type(device) is not str: device = device.device
+    dir_path = pull_apk(device, package_name, root)
     if not dir_path: return False
     # cmd = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
-    cmd = ["adb", "shell", "pm", "uninstall", "-k", package_name]
+    cmd = ["adb", "-s", device, "shell", "pm", "uninstall", "-k", package_name]
+    print("开始卸载...")
     run, msg = run_msg(cmd)
-    if run.returncode:
-        restore(dir_path, root)
+    if run.returncode: restore(device, dir_path, root)
     return run
 
 def unpack(file_path):
