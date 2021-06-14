@@ -280,7 +280,7 @@ def main(root, one):
         else: print(f"错误    {err.code}")
         return False
     except Exception:
-        traceback.print_exc(limit=2, file=sys.stdout)
+        traceback.print_exc(file=sys.stdout)
         return False
     finally:
         os.chdir(root)
@@ -384,7 +384,7 @@ if __name__ == "__main__":
             print(f"正在安装第{i+1}/{_len_}个...")
             if main(root, one): success += 1
     except Exception:
-        traceback.print_exc(limit=2, file=sys.stdout)
+        traceback.print_exc(file=sys.stdout)
     finally:
         print(f"共{_len_}个，成功安装了{success}个。")
         os.system("pause")
