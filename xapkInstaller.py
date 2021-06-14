@@ -85,7 +85,7 @@ def dump_py(file_path, del_path):
     del_path.append(get_unpack_path(file_path))
     zip_file = zipfile.ZipFile(file_path)
     upfile = "AndroidManifest.xml"
-    zip_file.extract(upfile, os.path.join(del_path[-1], upfile))
+    zip_file.extract(upfile, del_path[-1])
     with open(os.path.join(del_path[-1], upfile), "rb") as f: data = f.read()
     ap = axmlprinter.AXMLPrinter(data)
     buff = minidom.parseString(ap.getBuff())
