@@ -45,7 +45,11 @@ class Device:
 
 def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    devices = tostr(run.stdout).strip().split("\n")[1:]
+    _devices = tostr(run.stdout).strip().split("\n")[1:]
+    devices = []
+    for i in _devices:
+        if i.split("\t")[1] != "offline":
+            devices.append(i.split("\t")[0])
     
     # TODO 多设备安装
     # adb -s <device-id/ip:port> shell xxx
@@ -56,7 +60,7 @@ def check(root, del_path):
         sys.exit("安装失败：设备过多！多设备安装功能正在完善！")
         if not input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() in ["y", "Y"]:
             sys.exit("用户取消安装！")
-    return [i.split("\t")[0] for i in devices]
+    return devices
 
 def delPath(path):
     if not os.path.exists(path): return
