@@ -77,7 +77,9 @@ def dump(file_path, del_path):
         if "sdkVersion:" in line: manifest["min_sdk_version"] = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line: manifest["target_sdk_version"] = int(line.strip().split("'")[1])
         elif "native-code:" in line: manifest["native_code"].extend(re.findall(r"'([^,']+)'",line))
-        elif "package: name=" in line: manifest["package_name"] = line.split("'")[1]
+        elif "package: name=" in line:
+            manifest["package_name"] = line.split("'")[1]
+            manifest["versionCode"] = line.split("'")[3]
     return manifest
 
 def dump_py(file_path, del_path):
@@ -91,6 +93,7 @@ def dump_py(file_path, del_path):
     buff = minidom.parseString(ap.getBuff())
     manifest = {}
     manifest["package_name"] = buff.getElementsByTagName("manifest")[0].getAttribute("package")
+    manifest["versionCode"] = buff.getElementsByTagName("manifest")[0].getAttribute("android:versionCode")
     manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
     try:
         manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
@@ -134,6 +137,14 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
+    run, msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", manifest["package_name"]])
+    for i in msg.split("\n"):
+        if "versionCode" in i:
+            versionCode = i.strip().split("=")[1].split(" ")[0]
+    if manifest["versionCode"] < versionCode:
+        if input("警告：降级安装？请确保文件无误！(y/N)").lower() != "y": sys.exit("降级安装，用户取消安装。")
+    elif manifest["versionCode"] == versionCode:
+        if input("警告：版本一致！请确保文件无误！(y/N)").lower() != "y": sys.exit("版本一致，用户取消安装。")
     
     if type(device) is not Device: device = Device(device)
     if device.sdk < manifest["min_sdk_version"]: sys.exit("安装失败：安卓版本过低！")
