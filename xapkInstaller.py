@@ -316,6 +316,27 @@ def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f: data = f.read()
     return json.loads(tostr(data))
 
+def restore(dir_path):
+    os.chdir(dir_path)
+    all = os.listdir(dir_path)
+    obb = False
+    for i in all:
+        if i.endswith(".obb"):
+            obb = False
+            break
+    if obb:
+        for i in all:
+            if i.endswith(".apk"): install_apk(os.path.join(dir_path, i))
+            elif i.endswith(".obb"):
+                push = ["adb", "push", os.path.join(dir_path, i), \
+                "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
+                subprocess.run(pull, shell=True)
+    else:
+        install = ["adb", "install-multiple", "-rtd"]
+        install.extend(all)
+        subprocess.run(install, shell=True)
+    os.chdir(root)
+    
 def run_msg(cmd):
     run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.stderr: return run, tostr(run.stderr)
@@ -323,12 +344,15 @@ def run_msg(cmd):
     return run, ""
 
 def uninstall(package_name, root):
-    # TODO 安装失败后自动重装旧版本
-    if not pull_apk(package_name, root): return False
+    dir_path = pull_apk(package_name, root)
+    if not dir_path: return False
     # cmd = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     cmd = ["adb", "shell", "pm", "uninstall", "-k", package_name]
-    return subprocess.run(cmd, shell=True)
+    run, msg = run_msg(msg)
+    if run.returncode:
+        restore(dir_path, root)
+    return run
 
 def unpack(file_path):
     """解压文件"""
