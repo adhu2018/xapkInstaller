@@ -45,14 +45,18 @@ class Device:
 
 def check(root, del_path):
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    devices = len(tostr(run.stdout).strip().split("\n")[1:])
+    devices = tostr(run.stdout).strip().split("\n")[1:]
     
     # TODO 多设备安装
     # adb -s <device-id/ip:port> shell xxx
     if run.returncode: sys.exit(run.stderr)
-    elif devices==0: sys.exit("安装失败：手机未连接电脑！")
-    elif devices==1: return
-    elif devices>1: sys.exit("安装失败：设备过多！暂不支持多设备情况下进行安装！")
+    elif len(devices)==0: sys.exit("安装失败：手机未连接电脑！")
+    elif len(devices)==1: pass
+    elif len(devices)>1:
+        sys.exit("安装失败：设备过多！多设备安装功能正在完善！")
+        if not input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() in ["y", "Y"]:
+            sys.exit("用户取消安装！")
+    return [i.split("\t")[0] for i in devices]
 
 def delPath(path):
     if not os.path.exists(path): return
@@ -238,7 +242,7 @@ def main(root, one):
     else: shutil.copytree(copy[0], copy[1])
     
     try:
-        check(root, del_path)
+        devices = check(root, del_path)
         if copy[1].endswith(".apk"):
             if not install_apk(copy[1], del_path, root)[0]: sys.exit(1)
         elif copy[1].endswith(".xapk"):
