@@ -297,7 +297,7 @@ def md5(*_str):
     m.update(t)
     return m.hexdigest()
 
-def pull_apk(root, package):
+def pull_apk(package, root):
     run, msg = run_msg(["adb", "shell", "pm", "path", package])
     if run.returncode: sys.exit(msg)
     else:
