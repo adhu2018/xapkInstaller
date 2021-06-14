@@ -44,7 +44,6 @@ class Device:
         return self._sdk
 
 def check(root, del_path):
-    subprocess.call("adb kill-server", shell=True)
     run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     devices = len(tostr(run.stdout).strip().split("\n")[1:])
     
