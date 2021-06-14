@@ -356,7 +356,7 @@ def uninstall(package_name, root):
     # cmd = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     cmd = ["adb", "shell", "pm", "uninstall", "-k", package_name]
-    run, msg = run_msg(msg)
+    run, msg = run_msg(cmd)
     if run.returncode:
         restore(dir_path, root)
     return run
