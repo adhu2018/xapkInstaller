@@ -16,7 +16,7 @@
 ```powershell
 pyinstaller -F xapkInstaller.py -n xapkInstaller4win
 ```
-或下载已编译好的[最新版本](https://github.com/adhu2018/xapkInstaller/releases/latest)。  
+或下载[已编译版本](https://github.com/adhu2018/xapkInstaller/releases/latest)。  
 
 使用方法：  
 - 直接拖拽（推荐）：将需要安装的一个或多个文件（夹）拖向xapkInstaller即可。  
