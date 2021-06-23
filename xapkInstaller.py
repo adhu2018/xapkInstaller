@@ -79,7 +79,7 @@ def dump(file_path, del_path):
         elif "native-code:" in line: manifest["native_code"].extend(re.findall(r"'([^,']+)'",line))
         elif "package: name=" in line:
             manifest["package_name"] = line.split("'")[1]
-            manifest["versionCode"] = line.split("'")[3]
+            manifest["versionCode"] = int(line.split("'")[3])
     return manifest
 
 def dump_py(file_path, del_path):
@@ -93,7 +93,7 @@ def dump_py(file_path, del_path):
     buff = minidom.parseString(ap.getBuff())
     manifest = {}
     manifest["package_name"] = buff.getElementsByTagName("manifest")[0].getAttribute("package")
-    manifest["versionCode"] = buff.getElementsByTagName("manifest")[0].getAttribute("android:versionCode")
+    manifest["versionCode"] = int(buff.getElementsByTagName("manifest")[0].getAttribute("android:versionCode"))
     manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
     try:
         manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
@@ -137,7 +137,9 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
+    print(manifest)
     run, msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", manifest["package_name"]])
+    versionCode = 0
     for i in msg.split("\n"):
         if "versionCode" in i:
             versionCode = i.strip().split("=")[1].split(" ")[0]
