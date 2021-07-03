@@ -138,11 +138,12 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
     print(manifest)
+    if type(device) is not str: device = device.device
     run, msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", manifest["package_name"]])
     versionCode = 0
     for i in msg.split("\n"):
         if "versionCode" in i:
-            versionCode = i.strip().split("=")[1].split(" ")[0]
+            versionCode = int(i.strip().split("=")[1].split(" ")[0])
     if manifest["versionCode"] < versionCode:
         if input("警告：降级安装？请确保文件无误！(y/N)").lower() != "y": sys.exit("降级安装，用户取消安装。")
     elif manifest["versionCode"] == versionCode:
