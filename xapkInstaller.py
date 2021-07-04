@@ -9,6 +9,7 @@ except ImportError:
     import re
 # 第三方
 import chardet
+import yaml
 from axmlparserpy import axmlprinter
 
 
@@ -122,11 +123,14 @@ def install_aab(file_path, del_path):
     if os.path.exists(del_path[-1]): delPath(del_path[-1])
     build = ["java", "-jar", "bundletool.jar", "build-apks",\
         "--connected-device", "--bundle="+name_suffix, "--output="+del_path[-1]]
+    sign = read_config("./config.yaml")
+    """
     sign = {}
     sign["ks"] = ""  # `/path/to/keystore.jks`
     sign["ks-pass"] = ""  # `pass:password` or `file:/path/to/keystore.pwd`
     sign["ks-key-alias"] = ""  # `alias`
     sign["key-pass"] = ""  # `pass:password` or `file:/path/to/key.pwd`
+    """
     if sign["ks"] and sign["ks-pass"] and sign["ks-key-alias"] and sign["key-pass"]:
         for i in sign: build.append(f"--{i}={sign[i]}")
     status = subprocess.call(build, shell=True)
@@ -342,6 +346,10 @@ def pull_apk(device, package, root):
         run, msg = run_msg(cmd)
         if run.returncode and "No such file or directory" not in msg and "does not exist" not in msg: sys.exit(msg)
         return dir_path
+
+def read_config(yaml_file):
+    with open(yaml_file, "rb") as f: data = f.read()
+    return yaml.load(tostr(data), Loader=yaml.FullLoader)
 
 def read_manifest(manifest_path):
     with open(manifest_path, "rb") as f: data = f.read()
