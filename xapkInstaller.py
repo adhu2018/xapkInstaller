@@ -400,9 +400,11 @@ def unpack(file_path):
 if __name__ == "__main__":
     if len(sys.argv)<2:
         print("缺少参数！")
-        print("xapkInstaller <apk路径|xapk路径|xapk解压路径>")
+        print("xapkInstaller <filepath or dirpath>")
         print("例如：")
+        print("    xapkInstaller abc.aab")
         print("    xapkInstaller abc.apk")
+        print("    xapkInstaller abc.apks")
         print("    xapkInstaller abc.xapk")
         print("    xapkInstaller ./abc/")
         os.system("pause")
