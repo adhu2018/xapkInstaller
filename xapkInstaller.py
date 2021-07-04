@@ -363,7 +363,7 @@ def restore(device, dir_path):
             elif i.endswith(".obb"):
                 push = ["adb", "-s", device, "push", os.path.join(dir_path, i), \
                 "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
-                subprocess.run(pull, shell=True)
+                subprocess.run(push, shell=True)
     else:
         install = ["adb", "-s", device, "install-multiple", "-rtd"]
         install.extend(all)
