@@ -8,9 +8,9 @@
     - `*.apk` ：[`aapt(非必要)`](https://dl.androidaapt.com/aapt-windows.zip)  
     - `*.obb`  
   - `xapk_version==2 `  
-- `*.apk` 需要 [`adb`](https://dl.google.com/android/repository/platform-tools-latest-windows.zip?hl=zh-cn), [`aapt(非必要)`](https://dl.androidaapt.com/aapt-windows.zip)  
+- `*.apk` 需要 `adb`, `aapt(非必要)`  
 - `*.aab => *.apks` 需要 `java`, [`bundletool.jar`](https://github.com/google/bundletool/releases)  
-- `*.apks` 需要 `java`, [`bundletool.jar`](https://github.com/google/bundletool/releases)  
+- `*.apks` 需要 `java`, `bundletool.jar`  
 
 使用以下语句进行编译：  
 ```powershell
@@ -24,6 +24,14 @@ pyinstaller -F xapkInstaller.py -n xapkInstaller4win
 
 文件夹指xapk的解压文件夹。  
 
-经过将近一个月的迭代更新，现已支持各种常见的安装包格式(`aab`, `apk`, `apks`, `xapk`)！  
+支持的安装包格式：
+
+- [x] `aab` 
+- [x] `apk ` 
+- [ ] `apkm` 
+- [x] `apks ` 
+- [x] `xapk` 
+
+不支持各种增量更新包。  
 
 如果你有见过其他格式的安装包或者在使用过程中出现了问题，请[提交issues](https://github.com/adhu2018/xapkInstaller/issues/new)。  
