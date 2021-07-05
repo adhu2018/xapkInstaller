@@ -228,10 +228,7 @@ def install_xapk(device, file_path, del_path, root):
             elif i["id"]==f"config.{device.locale.split('-')[0]}": config["locale"] = i["file"]
             elif i["id"]=="config.arm64_v8a": config["arm64-v8a"] = i["file"]
             elif i["id"]=="config.armeabi_v7a": config["armeabi-v7a"] = i["file"]
-            elif i["id"]=="config.xhdpi": config["xhdpi"] = i["file"]
-            elif i["id"]=="config.xxhdpi": config["xxhdpi"] = i["file"]
-            elif i["id"]=="config.xxxhdpi": config["xxxhdpi"] = i["file"]
-            elif i["id"]=="config.tvdpi": config["tvdpi"] = i["file"]
+            elif i["id"].endswith("dpi"): config[i.split(".")[1]] = i["file"]
             elif i["id"] in language: config["language"].append(i["file"])
             elif i["id"] in other: pass
             else: install.append(i["file"])
