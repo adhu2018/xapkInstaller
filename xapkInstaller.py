@@ -23,6 +23,7 @@ tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
 class Device:
     def __init__(self, device):
         self._abi = None
+        self._abilist = None
         self._sdk = None
         self.device = device
     
@@ -37,7 +38,12 @@ class Device:
     
     @property
     def abilist(self):
-        return os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abilist").read().strip().split(",")
+        if not self._abilist: self.getabilist()
+        return self._abilist
+    
+    def getabilist(self):
+        self._abilist = os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abilist").read().strip().split(",")
+        return self._abilist
     
     @property
     def locale(self):
