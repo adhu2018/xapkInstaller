@@ -85,7 +85,7 @@ def dump(file_path, del_path):
 
 def dump_py(file_path, del_path):
     print("未配置aapt或aapt存在错误！")
-    del_path.append(get_unpack_path(file_path))
+    del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = zipfile.ZipFile(file_path)
     upfile = "AndroidManifest.xml"
     zip_file.extract(upfile, del_path[-1])
@@ -278,7 +278,7 @@ def main(root, one):
             elif copy[1].endswith(".aab"): install_aab(copy[1], del_path)
             elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
             
-            if os.path.isdir(del_path[-1]):
+            if os.path.isdir(del_path[-1]) and os.path.exists(os.path.join(del_path[-1], "manifest.json")):
                 os.chdir(del_path[-1])
                 install, run = install_xapk(device, del_path[-1], del_path, root)
                 if run.returncode:
