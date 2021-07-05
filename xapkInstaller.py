@@ -13,6 +13,7 @@ import yaml
 from axmlparserpy import axmlprinter
 
 
+_abi = ["armeabi_v7a", "arm64_v8a", "x86", "x86_64"]
 _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
     "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl", "tr",
     "vi", "zh"]
@@ -217,6 +218,7 @@ def install_xapk(device, file_path, del_path, root):
         if device.sdk > int(manifest["target_sdk_version"]): print("警告：安卓版本过高！可能存在兼容性问题！")
         
         install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
+        abi = [ f"config.{i}" for i in _abi ]
         language = [ f"config.{i}" for i in _language ]
         other = ["extra_icu", "feedv2", "vr"]  # Google Chrome
         
@@ -226,9 +228,8 @@ def install_xapk(device, file_path, del_path, root):
         for i in split_apks:
             if i["id"]==f"config.{device.abi.replace('-', '_')}": config["abi"] = i["file"]
             elif i["id"]==f"config.{device.locale.split('-')[0]}": config["locale"] = i["file"]
-            elif i["id"]=="config.arm64_v8a": config["arm64-v8a"] = i["file"]
-            elif i["id"]=="config.armeabi_v7a": config["armeabi-v7a"] = i["file"]
-            elif i["id"].endswith("dpi"): config[i.split(".")[1]] = i["file"]
+            elif i["id"] in abi: config[i["id"].split(".")[1]] = i["file"]
+            elif i["id"].endswith("dpi"): config[i["id"].split(".")[1]] = i["file"]
             elif i["id"] in language: config["language"].append(i["file"])
             elif i["id"] in other: pass
             else: install.append(i["file"])
