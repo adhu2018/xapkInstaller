@@ -28,7 +28,7 @@ pyinstaller -F xapkInstaller.py -n xapkInstaller4win
 
 - [x] `aab` 
 - [x] `apk ` 
-- [ ] `apkm` 
+- [x] `apkm` 
 - [x] `apks ` 
 - [x] `xapk` 
 

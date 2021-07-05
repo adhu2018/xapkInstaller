@@ -243,6 +243,52 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
             sys.exit(1)
     return install, status
 
+def install_apkm(device, file_path, del_path, root):
+    _, name_suffix = os.path.split(file_path)
+    del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
+    zip_file = zipfile.ZipFile(file_path)
+    upfile = "info.json"
+    zip_file.extract(upfile, del_path[-1])
+    info = read_json(os.path.join(del_path[-1], upfile))
+    file_list = zip_file.namelist()
+    if type(device) is not Device: device = Device(device)
+    if device.sdk < int(info["min_api"]): sys.exit("安装失败：安卓版本过低！")
+    install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
+    abi = [ f"split_config.{i}.apk" for i in _abi ]
+    language = [ f"split_config.{i}.apk" for i in _language ]
+    
+    config = {}
+    config["language"] = []
+    # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
+    for i in file_list:
+        if i==f"split_config.{device.abi.replace('-', '_')}.apk": config["abi"] = i
+        if i==f"split_config.{device.dpi}.apk": config["dpi"] = i
+        elif i==f"split_config.{device.locale.split('-')[0]}.apk": config["locale"] = i
+        elif i in abi: config[i.split(".")[1]] = i
+        elif i.find("dpi.apk")>=0: config[i.split(".")[1]] = i
+        elif i in language: config["language"].append(i)
+        elif i.endswith(".apk"): install.append(i)
+    
+    if config.get("abi"): install.append(config["abi"])
+    else:
+        for i in device.abilist:
+            if config.get(i): install.append(config[i]); break
+    if config.get("dpi"): install.append(config["dpi"])
+    else:
+        for i in ["ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
+            if config.get(i): install.append(config[i]); break
+    if config.get("locale"): install.append(config["locale"])
+    elif config.get("language"):
+        # 如果自动匹配语言不成功，就添加列表中第一个语言
+        print(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
+        install.append(config["language"][0])
+    else: print("找不到任意一种语言包！！")
+    print(install)
+    for i in install[5:]:
+        zip_file.extract(i, del_path[-1])
+    os.chdir(del_path[-1])
+    return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
 def install_apks(file_path):
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
@@ -329,6 +375,7 @@ def main(root, one):
             elif copy[1].endswith(".xapk"):
                 del_path.append(unpack(copy[1]))
                 os.chdir(del_path[-1])
+            elif copy[1].endswith(".apkm"): install_apkm(device, copy[1], del_path, root)
             elif copy[1].endswith(".apks"): install_apks(copy[1])
             elif copy[1].endswith(".aab"): install_aab(copy[1], del_path)
             elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
