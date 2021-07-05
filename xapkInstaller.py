@@ -274,6 +274,7 @@ def install_xapk(device, file_path, del_path, root):
         # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
         for i in split_apks:
             if i["id"]==f"config.{device.abi.replace('-', '_')}": config["abi"] = i["file"]
+            if i["id"]==f"config.{device.dpi}": config["dpi"] = i["file"]
             elif i["id"]==f"config.{device.locale.split('-')[0]}": config["locale"] = i["file"]
             elif i["id"] in abi: config[i["id"].split(".")[1]] = i["file"]
             elif i["id"].endswith("dpi"): config[i["id"].split(".")[1]] = i["file"]
@@ -285,8 +286,10 @@ def install_xapk(device, file_path, del_path, root):
         else:
             for i in device.abilist:
                 if config.get(i): install.append(config[i]); break
-        for i in ["xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
-            if config.get(i): install.append(config[i]); break
+        if config.get("dpi"): install.append(config["dpi"])
+        else:
+            for i in ["ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
+                if config.get(i): install.append(config[i]); break
         if config.get("locale"): install.append(config["locale"])
         elif config.get("language"):
             # 如果自动匹配语言不成功，就添加列表中第一个语言
