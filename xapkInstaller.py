@@ -13,6 +13,10 @@ import yaml
 from axmlparserpy import axmlprinter
 
 
+_language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
+    "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl", "tr",
+    "vi", "zh"]
+
 tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
 
 class Device:
@@ -213,10 +217,7 @@ def install_xapk(device, file_path, del_path, root):
         if device.sdk > int(manifest["target_sdk_version"]): print("警告：安卓版本过高！可能存在兼容性问题！")
         
         install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
-        language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
-            "config.hi", "config.in", "config.it", "config.ja", "config.ko",
-            "config.my", "config.pt", "config.ru", "config.th", "config.tr", 
-            "config.vi", "config.zh"]
+        language = [ f"config.{i}" for i in _language ]
         other = ["extra_icu", "feedv2", "vr"]  # Google Chrome
         
         config = {}
