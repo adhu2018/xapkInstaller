@@ -213,7 +213,7 @@ def install_xapk(device, file_path, del_path, root):
         if device.sdk > int(manifest["target_sdk_version"]): print("警告：安卓版本过高！可能存在兼容性问题！")
         
         install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
-        other_language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
+        language = ["config.ar", "config.de", "config.en", "config.es", "config.fr", 
             "config.hi", "config.in", "config.it", "config.ja", "config.ko",
             "config.my", "config.pt", "config.ru", "config.th", "config.tr", 
             "config.vi", "config.zh"]
@@ -231,7 +231,7 @@ def install_xapk(device, file_path, del_path, root):
             elif i["id"]=="config.xxhdpi": config["xxhdpi"] = i["file"]
             elif i["id"]=="config.xxxhdpi": config["xxxhdpi"] = i["file"]
             elif i["id"]=="config.tvdpi": config["tvdpi"] = i["file"]
-            elif i["id"] in other_language: config["other_language"].append(i["file"])
+            elif i["id"] in language: config["language"].append(i["file"])
             elif i["id"] in other: pass
             else: install.append(i["file"])
         
@@ -242,10 +242,10 @@ def install_xapk(device, file_path, del_path, root):
         for i in ["xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
             if config.get(i): install.append(config[i]); break
         if config.get("locale"): install.append(config["locale"])
-        elif config.get("other_language"):
+        elif config.get("language"):
             # 如果自动匹配语言不成功，就添加列表中第一个语言
-            print(f"找不到设备语言一致的语言包，将安装`{config['other_language'][0]}`语言包。")
-            install.append(config["other_language"][0])
+            print(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
+            install.append(config["language"][0])
         else: print("找不到任意一种语言包！！")
         print(install)
         return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
