@@ -22,12 +22,18 @@ tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
 
 class Device:
     def __init__(self, device):
+        self._abi = None
         self._sdk = None
         self.device = device
     
     @property
     def abi(self):
-        return os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abi").read().strip()
+        if not self._abi: self.getabi()
+        return self._abi
+    
+    def getabi(self):
+        self._abi = os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abi").read().strip()
+        return self._abi
     
     @property
     def abilist(self):
