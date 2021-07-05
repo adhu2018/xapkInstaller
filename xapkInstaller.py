@@ -204,7 +204,7 @@ def install_xapk(device, file_path, del_path, root):
     print("开始安装...")
     if not os.path.isfile("manifest.json"):
         sys.exit(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
-    manifest = read_manifest("manifest.json")
+    manifest = read_json("manifest.json")
     if type(device) is not Device: device = Device(device)
     if not manifest.get("expansions"):
         split_apks = manifest["split_apks"]
@@ -220,6 +220,7 @@ def install_xapk(device, file_path, del_path, root):
         other = ["extra_icu", "feedv2", "vr"]  # Google Chrome
         
         config = {}
+        config["language"] = []
         # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
         for i in split_apks:
             if i["id"]==f"config.{device.abi.replace('-', '_')}": config["abi"] = i["file"]
@@ -230,7 +231,7 @@ def install_xapk(device, file_path, del_path, root):
             elif i["id"]=="config.xxhdpi": config["xxhdpi"] = i["file"]
             elif i["id"]=="config.xxxhdpi": config["xxxhdpi"] = i["file"]
             elif i["id"]=="config.tvdpi": config["tvdpi"] = i["file"]
-            elif i["id"] in other_language: pass
+            elif i["id"] in other_language: config["other_language"].append(i["file"])
             elif i["id"] in other: pass
             else: install.append(i["file"])
         
@@ -241,6 +242,11 @@ def install_xapk(device, file_path, del_path, root):
         for i in ["xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
             if config.get(i): install.append(config[i]); break
         if config.get("locale"): install.append(config["locale"])
+        elif config.get("other_language"):
+            # 如果自动匹配语言不成功，就添加列表中第一个语言
+            print(f"找不到设备语言一致的语言包，将安装`{config['other_language'][0]}`语言包。")
+            install.append(config["other_language"][0])
+        else: print("找不到任意一种语言包！！")
         print(install)
         return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
@@ -288,7 +294,7 @@ def main(root, one):
                     elif "INSTALL_FAILED_ALREADY_EXISTS" in err: sys.exit("已安装包名和版本号一致的应用！！")
                     else: print(err)
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
-                        package_name = read_manifest(os.path.join(del_path[-1], "manifest.json"))["package_name"]
+                        package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                         pull_path = uninstall(device, package_name, root)
                         msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
                             + f"旧版安装包路径：{pull_path}\n"
@@ -351,8 +357,8 @@ def read_config(yaml_file):
     with open(yaml_file, "rb") as f: data = f.read()
     return yaml.load(tostr(data), Loader=yaml.FullLoader)
 
-def read_manifest(manifest_path):
-    with open(manifest_path, "rb") as f: data = f.read()
+def read_json(file):
+    with open(file, "rb") as f: data = f.read()
     return json.loads(tostr(data))
 
 def restore(device, dir_path):
