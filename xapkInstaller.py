@@ -394,7 +394,10 @@ def uninstall(device, package_name, root):
     cmd = ["adb", "-s", device, "shell", "pm", "uninstall", "-k", package_name]
     print("开始卸载...")
     run, msg = run_msg(cmd)
-    if run.returncode: restore(device, dir_path, root)
+    try:
+        if run.returncode: restore(device, dir_path, root)
+    except:
+        sys.exit("恢复时出现未知错误！")
     return run
 
 def unpack(file_path):
