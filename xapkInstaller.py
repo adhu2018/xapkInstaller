@@ -24,6 +24,7 @@ class Device:
     def __init__(self, device):
         self._abi = None
         self._abilist = None
+        self._locale = None
         self._sdk = None
         self.device = device
     
@@ -47,7 +48,12 @@ class Device:
     
     @property
     def locale(self):
-        return os.popen(f"adb -s {self.device} shell getprop ro.product.locale").read().strip()
+        if not self._locale: self.getlocale()
+        return self._locale
+    
+    def getlocale(self):
+        self._locale = os.popen(f"adb -s {self.device} shell getprop ro.product.locale").read().strip()
+        return self._locale
     
     @property
     def sdk(self):
