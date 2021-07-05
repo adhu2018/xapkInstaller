@@ -24,6 +24,7 @@ class Device:
     def __init__(self, device):
         self._abi = None
         self._abilist = None
+        self._dpi = None
         self._locale = None
         self._sdk = None
         self.device = device
@@ -45,6 +46,34 @@ class Device:
     def getabilist(self):
         self._abilist = os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abilist").read().strip().split(",")
         return self._abilist
+    
+    @property
+    def dpi(self):
+        if not self._dpi: self.getdpi()
+        return self._dpi
+    
+    def getdpi(self):
+        _dpi = os.popen(f"adb -s {self.device} shell dumpsys window displays").read().strip()
+        for i in _dpi.split("\n"):
+            if i.find("dpi")>=0:
+                for j in i.strip().split(" "):
+                    if j.endswith("dpi"):
+                        _dpi = j
+        if _dpi == "120dpi":
+            self._dpi = "ldpi"
+        elif _dpi == "160dpi":
+            self._dpi = "mdpi"
+        elif _dpi == "240dpi":
+            self._dpi = "hdpi"
+        elif _dpi == "320dpi":
+            self._dpi = "xhdpi"
+        elif _dpi == "480dpi":
+            self._dpi = "xxhdpi"
+        elif _dpi == "640dpi":
+            self._dpi = "xxxhdpi"
+        elif 160<int(_dpi[:-3])<240:
+            self._dpi = "tvdpi"
+        return self._dpi
     
     @property
     def locale(self):
