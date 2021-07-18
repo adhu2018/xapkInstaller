@@ -195,7 +195,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     manifest = dump(name_suffix, del_path)
     print(manifest)
     if type(device) is not str: device = device.device
-    run, msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", manifest["package_name"]])
+    _, msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", manifest["package_name"]])
     versionCode = 0
     for i in msg.split("\n"):
         if "versionCode" in i:
@@ -226,9 +226,10 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
         pass
     
     install = ["adb", "-s", device.device, "install", abc, name_suffix]
-    status = subprocess.call(install, shell=True)
+    run, msg = run_msg(install)
+    status = run.returncode
     if status:
-        if abc=="-rtd":
+        if abc=="-rtd" and "argument expected" in msg:
             print('No argument expected after "-rtd"')
             print("正在修改安装参数重新安装，请等待...")
             return install_apk(device, file_path, del_path, root, "-r")
@@ -241,6 +242,10 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
                 sys.exit(msg)
         else:
             sys.exit(1)
+    elif "INSTALL_FAILED_TEST_ONLY" in msg:
+        print('INSTALL_FAILED_TEST_ONLY')
+        print("正在修改安装参数重新安装，请等待...")
+        return install_apk(device, file_path, del_path, root, "-t")
     return install, status
 
 def install_apkm(device, file_path, del_path, root):
