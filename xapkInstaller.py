@@ -318,7 +318,7 @@ def install_xapk(device, file_path, del_path, root):
         install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
         abi = [ f"config.{i}" for i in _abi ]
         language = [ f"config.{i}" for i in _language ]
-        other = ["extra_icu", "feedv2", "vr"]  # Google Chrome
+        other = ["extra_icu", "feedv2", "vr", "chime"]  # Google Chrome
         
         config = {}
         config["language"] = []
