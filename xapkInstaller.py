@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Python 自带
 import hashlib, json, os, shutil, subprocess, sys, traceback, zipfile
-import xml.dom.minidom as minidom
+import defusedxml.minidom as minidom
 # 第三方替代
 try:
     import regex as re
