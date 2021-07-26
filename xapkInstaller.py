@@ -185,8 +185,8 @@ def install_aab(file_path, del_path):
     """
     if sign["ks"] and sign["ks-pass"] and sign["ks-key-alias"] and sign["key-pass"]:
         for i in sign: build.append(f"--{i}={sign[i]}")
-    status = subprocess.call(build, shell=True)
-    if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
+    run = subprocess.run(build)
+    if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
 
 def install_apk(device, file_path, del_path, root, abc="-rtd"):
@@ -297,9 +297,9 @@ def install_apkm(device, file_path, del_path, root):
 def install_apks(file_path):
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
-    status = subprocess.call(install, shell=True)
-    if status: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
-    return install, status
+    run = subprocess.run(install)
+    if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
+    return install, run.returncode
 
 def install_xapk(device, file_path, del_path, root):
     """安装xapk文件"""
