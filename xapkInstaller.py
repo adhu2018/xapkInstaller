@@ -98,7 +98,7 @@ class Device:
         return self._sdk
 
 def check(root, del_path):
-    run = subprocess.run("adb devices", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    run = subprocess.run("adb devices", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     _devices = tostr(run.stdout).strip().split("\n")[1:]
     devices = []
     for i in _devices:
@@ -292,7 +292,7 @@ def install_apkm(device, file_path, del_path, root):
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
     os.chdir(del_path[-1])
-    return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return install, subprocess.run(install, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def install_apks(file_path):
     _, name_suffix = os.path.split(file_path)
@@ -348,14 +348,14 @@ def install_xapk(device, file_path, del_path, root):
             install.append(config["language"][0])
         else: print("找不到任意一种语言包！！")
         print(install)
-        return install, subprocess.run(install, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return install, subprocess.run(install, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
         install, _ = install_apk(device, manifest["package_name"]+".apk", del_path, root)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
                 push = ["adb", "-s", device.device, "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
-                return [install, push], subprocess.run(push, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return [install, push], subprocess.run(push, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             else: sys.exit(1)
 
 def main(root, one):
@@ -400,12 +400,12 @@ def main(root, one):
                         msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
                             + f"旧版安装包路径：{pull_path}\n"
                         if len(install)==2:
-                            run = subprocess.run(install[0], shell=True)
+                            run = subprocess.run(install[0])
                             if run.returncode: sys.exit(msg)
-                            run = subprocess.run(install[1], shell=True)
+                            run = subprocess.run(install[1])
                             if run.returncode: sys.exit(msg)
                         else:
-                            run = subprocess.run(install, shell=True)
+                            run = subprocess.run(install)
                             if run.returncode: sys.exit(msg)
                     else: sys.exit("用户取消安装！")
         return True
@@ -478,16 +478,16 @@ def restore(device, dir_path):
             elif i.endswith(".obb"):
                 push = ["adb", "-s", device, "push", os.path.join(dir_path, i), \
                 "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
-                subprocess.run(push, shell=True)
+                subprocess.run(push)
     else:
         install = ["adb", "-s", device, "install-multiple", "-rtd"]
         install.extend(all)
-        subprocess.run(install, shell=True)
+        subprocess.run(install)
     os.chdir(root)
     
 def run_msg(cmd):
     print(cmd)
-    run = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    run = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.stderr: return run, tostr(run.stderr)
     if run.stdout: return run, tostr(run.stdout)
     return run, ""
