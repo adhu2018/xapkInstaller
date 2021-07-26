@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Python 自带
 import hashlib, json, os, shutil, subprocess, sys, traceback, zipfile
+import shlex
 import defusedxml.minidom as minidom
 # 第三方替代
 try:
@@ -10,6 +11,10 @@ except ImportError:
 # 第三方
 import chardet
 import yaml
+try:
+    import keyboard
+except ImportError:
+    keyboard = None
 from axmlparserpy import axmlprinter
 
 
@@ -32,19 +37,19 @@ class Device:
     @property
     def abi(self):
         if not self._abi: self.getabi()
-        return self._abi
+        return self._abi.strip()
     
     def getabi(self):
-        self._abi = os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abi").read().strip()
+        _, self._abi = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abi")
         return self._abi
     
     @property
     def abilist(self):
         if not self._abilist: self.getabilist()
-        return self._abilist
+        return self._abilist.strip().split(",")
     
     def getabilist(self):
-        self._abilist = os.popen(f"adb -s {self.device} shell getprop ro.product.cpu.abilist").read().strip().split(",")
+        _, self._abilist = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abilist")
         return self._abilist
     
     @property
@@ -53,8 +58,8 @@ class Device:
         return self._dpi
     
     def getdpi(self):
-        _dpi = os.popen(f"adb -s {self.device} shell dumpsys window displays").read().strip()
-        for i in _dpi.split("\n"):
+        _, _dpi = run_msg(f"adb -s {self.device} shell dumpsys window displays")
+        for i in _dpi.strip().split("\n"):
             if i.find("dpi")>=0:
                 for j in i.strip().split(" "):
                     if j.endswith("dpi"):
@@ -78,27 +83,27 @@ class Device:
     @property
     def locale(self):
         if not self._locale: self.getlocale()
-        return self._locale
+        return self._locale.strip()
     
     def getlocale(self):
-        self._locale = os.popen(f"adb -s {self.device} shell getprop ro.product.locale").read().strip()
+        _, self._locale = run_msg(f"adb -s {self.device} shell getprop ro.product.locale")
         return self._locale
     
     @property
     def sdk(self):
         if not self._sdk: self.getsdk()
-        return self._sdk
+        return self._sdk.strip()
     
     def getsdk(self):
-        _sdk = os.popen(f"adb -s {self.device} shell getprop ro.build.version.sdk").read().strip()
-        if not _sdk: _sdk = os.popen(f"adb -s {self.device} shell getprop ro.product.build.version.sdk").read().strip()
-        if not _sdk: _sdk = os.popen(f"adb -s {self.device} shell getprop ro.system.build.version.sdk").read().strip()
-        if not _sdk: _sdk = os.popen(f"adb -s {self.device} shell getprop ro.system_ext.build.version.sdk").read().strip()
+        _sdk = run_msg(f"adb -s {self.device} shell getprop ro.build.version.sdk")[1].strip()
+        if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.product.build.version.sdk")[1].strip()
+        if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.system.build.version.sdk")[1].strip()
+        if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.system_ext.build.version.sdk")[1].strip()
         self._sdk = int(_sdk)
         return self._sdk
 
 def check(root, del_path):
-    run = subprocess.run("adb devices", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    run = run_msg("adb devices")[0]
     _devices = tostr(run.stdout).strip().split("\n")[1:]
     devices = []
     for i in _devices:
@@ -185,7 +190,7 @@ def install_aab(file_path, del_path):
     """
     if sign["ks"] and sign["ks-pass"] and sign["ks-key-alias"] and sign["key-pass"]:
         for i in sign: build.append(f"--{i}={sign[i]}")
-    run = subprocess.run(build)
+    run = run_msg(build)[0]
     if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
 
@@ -292,12 +297,12 @@ def install_apkm(device, file_path, del_path, root):
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
     os.chdir(del_path[-1])
-    return install, subprocess.run(install, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return install, run_msg(install)[0]
 
 def install_apks(file_path):
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
-    run = subprocess.run(install)
+    run = run_msg(install)[0]
     if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install, run.returncode
 
@@ -348,14 +353,14 @@ def install_xapk(device, file_path, del_path, root):
             install.append(config["language"][0])
         else: print("找不到任意一种语言包！！")
         print(install)
-        return install, subprocess.run(install, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return install, run_msg(install)[0]
     else:
         install, _ = install_apk(device, manifest["package_name"]+".apk", del_path, root)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
                 push = ["adb", "-s", device.device, "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
-                return [install, push], subprocess.run(push, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return [install, push], run_msg(push)[0]
             else: sys.exit(1)
 
 def main(root, one):
@@ -400,12 +405,12 @@ def main(root, one):
                         msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
                             + f"旧版安装包路径：{pull_path}\n"
                         if len(install)==2:
-                            run = subprocess.run(install[0])
+                            run = run_msg(install[0])[0]
                             if run.returncode: sys.exit(msg)
-                            run = subprocess.run(install[1])
+                            run = run_msg(install[1])[0]
                             if run.returncode: sys.exit(msg)
                         else:
-                            run = subprocess.run(install)
+                            run = run_msg(install)[0]
                             if run.returncode: sys.exit(msg)
                     else: sys.exit("用户取消安装！")
         return True
@@ -433,6 +438,16 @@ def md5(*_str):
         t = t.encode("utf-8")
     m.update(t)
     return m.hexdigest()
+
+def pause():
+    if keyboard:
+        print("请按任意键继续. . .")
+        while True:
+            key = keyboard.read_key()
+            if key: break
+    else:
+        input("Press Enter to continue ...")
+    sys.exit(0)
 
 def pull_apk(device, package, root):
     print("正在备份安装包...")
@@ -478,15 +493,16 @@ def restore(device, dir_path):
             elif i.endswith(".obb"):
                 push = ["adb", "-s", device, "push", os.path.join(dir_path, i), \
                 "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
-                subprocess.run(push)
+                run_msg(push)
     else:
         install = ["adb", "-s", device, "install-multiple", "-rtd"]
         install.extend(all)
-        subprocess.run(install)
+        run_msg(install)
     os.chdir(root)
     
 def run_msg(cmd):
     print(cmd)
+    if type(cmd) is str: cmd = shlex.split(cmd)
     run = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.stderr: return run, tostr(run.stderr)
     if run.stdout: return run, tostr(run.stdout)
@@ -524,8 +540,7 @@ if __name__ == "__main__":
         print("    xapkInstaller abc.apk")
         print("    xapkInstaller ./abc/")
         print("    xapkInstaller abc.apkm abc.apks abc.xapk ./abc/")
-        os.system("pause")
-        sys.exit(0)
+        pause()
     root, _ = os.path.split(sys.argv[0])
     if not root: root = os.getcwd()
     _len_ = len(sys.argv[1:])
@@ -538,5 +553,4 @@ if __name__ == "__main__":
         traceback.print_exc(file=sys.stdout)
     finally:
         print(f"共{_len_}个，成功安装了{success}个。")
-        os.system("pause")
-        sys.exit(0)
+        pause()
