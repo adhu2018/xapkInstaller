@@ -456,7 +456,7 @@ def pull_apk(device, package, root):
 
 def read_config(yaml_file):
     with open(yaml_file, "rb") as f: data = f.read()
-    return yaml.load(tostr(data), Loader=yaml.FullLoader)
+    return yaml.safe_load(tostr(data))
 
 def read_json(file):
     with open(file, "rb") as f: data = f.read()
