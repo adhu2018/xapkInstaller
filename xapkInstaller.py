@@ -151,7 +151,7 @@ def dump_py(file_path, del_path):
     try:
         manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
     except:
-        pass
+        print("`target_sdk_version` no found.")
     file_list = zip_file.namelist()
     native_code = []
     for i in file_list:
@@ -211,7 +211,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     try:
         if device.sdk > manifest["target_sdk_version"]: print("警告：安卓版本过高！可能存在兼容性问题！")
     except:
-        pass
+        print("`target_sdk_version` no found.")
     
     abilist = device.abilist
     
