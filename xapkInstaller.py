@@ -92,7 +92,7 @@ class Device:
     @property
     def sdk(self):
         if not self._sdk: self.getsdk()
-        return self._sdk.strip()
+        return self._sdk
     
     def getsdk(self):
         _sdk = run_msg(f"adb -s {self.device} shell getprop ro.build.version.sdk")[1].strip()
