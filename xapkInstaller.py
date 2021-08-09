@@ -282,6 +282,7 @@ def install_apkm(device, file_path, del_path, root):
     if config.get("abi"): install.append(config["abi"])
     else:
         for i in device.abilist:
+            i = i.replace('-', '_')
             if config.get(i): install.append(config[i]); break
     if config.get("dpi"): install.append(config["dpi"])
     else:
