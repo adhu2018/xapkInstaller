@@ -293,7 +293,6 @@ def install_apkm(device, file_path, del_path, root):
         print(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
         install.append(config["language"][0])
     else: print("找不到任意一种语言包！！")
-    print(install)
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
     os.chdir(del_path[-1])
@@ -352,7 +351,6 @@ def install_xapk(device, file_path, del_path, root):
             print(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
             install.append(config["language"][0])
         else: print("找不到任意一种语言包！！")
-        print(install)
         return install, run_msg(install)[0]
     else:
         install, _ = install_apk(device, manifest["package_name"]+".apk", del_path, root)
