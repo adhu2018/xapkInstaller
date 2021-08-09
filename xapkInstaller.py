@@ -440,7 +440,7 @@ def md5(*_str):
     return m.hexdigest()
 
 def pause():
-    print("按回车键继续...")
+    input("按回车键继续...")
     sys.exit(0)
 
 def pull_apk(device, package, root):
