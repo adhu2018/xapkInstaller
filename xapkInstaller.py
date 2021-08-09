@@ -440,13 +440,7 @@ def md5(*_str):
     return m.hexdigest()
 
 def pause():
-    if keyboard:
-        print("请按任意键继续. . .")
-        while True:
-            key = keyboard.read_key()
-            if key: break
-    else:
-        input("Press Enter to continue ...")
+    print("按回车键继续...")
     sys.exit(0)
 
 def pull_apk(device, package, root):
