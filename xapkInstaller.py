@@ -278,7 +278,7 @@ def install_apkm(device, file_path, del_path, root):
         elif i.find("dpi.apk")>=0: config[i.split(".")[1]] = i
         elif i in language: config["language"].append(i)
         elif i.endswith(".apk"): install.append(i)
-    
+    print(config)
     if config.get("abi"): install.append(config["abi"])
     else:
         for i in device.abilist:
@@ -336,7 +336,7 @@ def install_xapk(device, file_path, del_path, root):
             elif i["id"] in language: config["language"].append(i["file"])
             elif i["id"] in other: pass
             else: install.append(i["file"])
-        
+        print(config)
         if config.get("abi"): install.append(config["abi"])
         else:
             for i in device.abilist:
