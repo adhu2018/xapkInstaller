@@ -539,7 +539,7 @@ if __name__ == "__main__":
         for i, one in enumerate(sys.argv[1:]):
             print(f"正在安装第{i+1}/{_len_}个...")
             if main(root, one): success += 1
-    except Exception:
+    except:
         traceback.print_exc(file=sys.stdout)
     finally:
         print(f"共{_len_}个，成功安装了{success}个。")
