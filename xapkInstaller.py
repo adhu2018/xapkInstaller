@@ -11,10 +11,6 @@ except ImportError:
 # 第三方
 import chardet
 import yaml
-try:
-    import keyboard
-except ImportError:
-    keyboard = None
 from axmlparserpy import axmlprinter
 
 
