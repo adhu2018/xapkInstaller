@@ -31,29 +31,29 @@ class Device:
         self.device = device
     
     @property
-    def abi(self):
+    def abi(self) -> str:
         if not self._abi: self.getabi()
         return self._abi.strip()
     
-    def getabi(self):
+    def getabi(self) -> str:
         _, self._abi = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abi")
         return self._abi
     
     @property
-    def abilist(self):
+    def abilist(self) -> list:
         if not self._abilist: self.getabilist()
         return self._abilist.strip().split(",")
     
-    def getabilist(self):
+    def getabilist(self) -> str:
         _, self._abilist = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abilist")
         return self._abilist
     
     @property
-    def dpi(self):
+    def dpi(self) -> str:
         if not self._dpi: self.getdpi()
         return self._dpi
     
-    def getdpi(self):
+    def getdpi(self) -> str:
         _, _dpi = run_msg(f"adb -s {self.device} shell dumpsys window displays")
         for i in _dpi.strip().split("\n"):
             if i.find("dpi")>=0:
@@ -77,20 +77,20 @@ class Device:
         return self._dpi
     
     @property
-    def locale(self):
+    def locale(self) -> str:
         if not self._locale: self.getlocale()
         return self._locale.strip()
     
-    def getlocale(self):
+    def getlocale(self) -> str:
         _, self._locale = run_msg(f"adb -s {self.device} shell getprop ro.product.locale")
         return self._locale
     
     @property
-    def sdk(self):
+    def sdk(self) -> int:
         if not self._sdk: self.getsdk()
         return self._sdk
     
-    def getsdk(self):
+    def getsdk(self) -> int:
         _sdk = run_msg(f"adb -s {self.device} shell getprop ro.build.version.sdk")[1].strip()
         if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.product.build.version.sdk")[1].strip()
         if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.system.build.version.sdk")[1].strip()
@@ -121,7 +121,7 @@ def delPath(path):
     if os.path.isfile(path): return os.remove(path)
     return shutil.rmtree(path)
 
-def dump(file_path, del_path):
+def dump(file_path, del_path) -> dict:
     run, msg = run_msg(["aapt", "dump", "badging", file_path])
     if msg: print(msg)
     if run.returncode: return dump_py(file_path, del_path)
@@ -136,7 +136,7 @@ def dump(file_path, del_path):
             manifest["versionCode"] = int(line.split("'")[3])
     return manifest
 
-def dump_py(file_path, del_path):
+def dump_py(file_path, del_path) -> dict:
     print("未配置aapt或aapt存在错误！")
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = zipfile.ZipFile(file_path)
@@ -160,14 +160,14 @@ def dump_py(file_path, del_path):
     manifest["native_code"] = list(set(native_code))
     return manifest
 
-def get_unpack_path(file_path):
+def get_unpack_path(file_path) -> str:
     """获取文件解压路径"""
     dir_path, name_suffix = os.path.split(file_path)
     name, suffix = os.path.splitext(name_suffix)
     unpack_path = os.path.join(dir_path, name)
     return unpack_path
 
-def install_aab(file_path, del_path):
+def install_aab(file_path, del_path) -> (list, int):
     """正式版是需要签名的，配置好才能安装"""
     print(install_aab.__doc__)
     _, name_suffix = os.path.split(file_path)
@@ -190,7 +190,7 @@ def install_aab(file_path, del_path):
     if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
 
-def install_apk(device, file_path, del_path, root, abc="-rtd"):
+def install_apk(device, file_path, del_path, root, abc="-rtd") -> (list, int):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
@@ -217,7 +217,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     abilist = device.abilist
     
     try:
-        def findabi(native_code):
+        def findabi(native_code) -> bool:
             for i in abilist:
                 if i in native_code: return True
             return False
@@ -247,7 +247,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
         return install_apk(device, file_path, del_path, root, "-t")
     return install, status
 
-def install_apkm(device, file_path, del_path, root):
+def install_apkm(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     _, name_suffix = os.path.split(file_path)
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = zipfile.ZipFile(file_path)
@@ -293,14 +293,14 @@ def install_apkm(device, file_path, del_path, root):
     os.chdir(del_path[-1])
     return install, run_msg(install)[0]
 
-def install_apks(file_path):
+def install_apks(file_path) -> (list, int):
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
     run = run_msg(install)[0]
     if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install, run.returncode
 
-def install_xapk(device, file_path, del_path, root):
+def install_xapk(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     """安装xapk文件"""
     os.chdir(file_path)
     print("开始安装...")
@@ -357,7 +357,7 @@ def install_xapk(device, file_path, del_path, root):
                 return [install, push], run_msg(push)[0]
             else: sys.exit(1)
 
-def main(root, one):
+def main(root, one) -> bool:
     os.chdir(root)
     _, name_suffix = os.path.split(one)
     name_suffix = name_suffix.rsplit(".", 1)
@@ -419,7 +419,7 @@ def main(root, one):
         os.chdir(root)
         for i in del_path: delPath(i)
 
-def md5(*_str):
+def md5(*_str) -> str:
     if len(_str) <= 0: sys.exit("缺少参数！")
     t = _str[0]
     if type(t) is not str: t = str(t)
@@ -437,7 +437,7 @@ def pause():
     input("按回车键继续...")
     sys.exit(0)
 
-def pull_apk(device, package, root):
+def pull_apk(device, package, root) -> str:
     print("正在备份安装包...")
     if type(device) is not str: device = device.device
     run, msg = run_msg(["adb", "-s", device, "shell", "pm", "path", package])
@@ -457,11 +457,11 @@ def pull_apk(device, package, root):
         if run.returncode and "No such file or directory" not in msg and "does not exist" not in msg: sys.exit(msg)
         return dir_path
 
-def read_config(yaml_file):
+def read_config(yaml_file) -> dict:
     with open(yaml_file, "rb") as f: data = f.read()
     return yaml.safe_load(tostr(data))
 
-def read_json(file):
+def read_json(file) -> dict:
     with open(file) as f:
         return json.load(f)
 
@@ -488,7 +488,7 @@ def restore(device, dir_path):
         run_msg(install)
     os.chdir(root)
     
-def run_msg(cmd):
+def run_msg(cmd) -> (subprocess.CompletedProcess, str):
     print(cmd)
     if type(cmd) is str: cmd = shlex.split(cmd)
     run = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -511,7 +511,7 @@ def uninstall(device, package_name, root):
         sys.exit(f"恢复时出现未知错误！请尝试手动操作并反馈该问题！旧版安装包路径：{dir_path}")
     return run
 
-def unpack(file_path):
+def unpack(file_path) -> str:
     """解压文件"""
     unpack_path = get_unpack_path(file_path)
     print("文件越大，解压越慢，请耐心等待...")
