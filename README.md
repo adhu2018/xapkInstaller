@@ -10,6 +10,7 @@
   - `xapk_version==2 `  
 - `*.apk` 需要 `adb`, `aapt(非必要)`  
 - `*.aab => *.apks` 需要 `java`, [`bundletool.jar`](https://github.com/google/bundletool/releases)  
+- `*.apkm` 需要 `adb`  
 - `*.apks` 需要 `java`, `bundletool.jar`  
 
 使用以下语句进行编译：  
@@ -19,7 +20,7 @@ pyinstaller -F xapkInstaller.py -n xapkInstaller4win
 或下载[已编译版本](https://github.com/adhu2018/xapkInstaller/releases/latest)。  
 
 使用方法：  
-- 直接拖拽（推荐）：将需要安装的一个或多个文件（夹）拖向xapkInstaller即可。  
+- 设置默认打开方式（推荐）：选中安装包，右键，打开方式，选择其他应用，找到xapkInstaller。下次直接双击安装包就行了。  
 - 命令行：xapkInstaller后添加需要安装的文件（夹），添加多个时使用空格隔开。  
 
 文件夹指xapk的解压文件夹。  
