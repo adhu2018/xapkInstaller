@@ -462,8 +462,8 @@ def read_config(yaml_file):
     return yaml.safe_load(tostr(data))
 
 def read_json(file):
-    with open(file, "rb") as f: data = f.read()
-    return json.loads(tostr(data))
+    with open(file) as f:
+        return json.load(f)
 
 def restore(device, dir_path):
     print("开始恢复...")
