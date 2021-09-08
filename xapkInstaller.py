@@ -473,7 +473,7 @@ def restore(device, dir_path):
     obb = False
     for i in all:
         if i.endswith(".obb"):
-            obb = False
+            obb = True
             break
     if obb:
         for i in all:
