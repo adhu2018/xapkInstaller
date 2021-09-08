@@ -508,7 +508,7 @@ def uninstall(device, package_name, root):
     try:
         if run.returncode: restore(device, dir_path, root)
     except:
-        sys.exit("恢复时出现未知错误！")
+        sys.exit(f"恢复时出现未知错误！请尝试手动操作并反馈该问题！旧版安装包路径：{dir_path}")
     return run
 
 def unpack(file_path):
