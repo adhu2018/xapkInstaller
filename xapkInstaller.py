@@ -235,12 +235,10 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
             print("正在修改安装参数重新安装，请等待...")
             return install_apk(device, file_path, del_path, root, "-r")
         elif abc=="-r":
-            pull_path = uninstall(device, manifest["package_name"], root)
-            install, status = install_apk(device, file_path, del_path, root, "")
-            if status:
-                msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
-                    + f"旧版安装包路径：{pull_path}\n"
-                sys.exit(msg)
+            if uninstall(device, manifest["package_name"], root):
+                return install_apk(device, file_path, del_path, root, "")
+            else:
+                sys.exit("备份文件时出现错误")
         else:
             sys.exit(1)
     elif "INSTALL_FAILED_TEST_ONLY" in msg:
@@ -397,24 +395,24 @@ def main(root, one):
                     else: print(err)
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
                         package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
-                        pull_path = uninstall(device, package_name, root)
-                        msg = "安装失败！自动恢复旧版本功能未完成，请手动操作！\n"\
-                            + f"旧版安装包路径：{pull_path}\n"
-                        if len(install)==2:
-                            run = run_msg(install[0])[0]
-                            if run.returncode: sys.exit(msg)
-                            run = run_msg(install[1])[0]
-                            if run.returncode: sys.exit(msg)
+                        if uninstall(device, package_name, root):
+                            if len(install)==2:
+                                run = run_msg(install[0])[0]
+                                if run.returncode: sys.exit(msg)
+                                run = run_msg(install[1])[0]
+                                if run.returncode: sys.exit(msg)
+                            else:
+                                run = run_msg(install)[0]
+                                if run.returncode: sys.exit(msg)
                         else:
-                            run = run_msg(install)[0]
-                            if run.returncode: sys.exit(msg)
+                            sys.exit("备份文件时出现错误")
                     else: sys.exit("用户取消安装！")
         return True
     except SystemExit as err:
         if err.code==1: print("错误    安装失败：未知错误！请提供文件进行适配！")
         else: print(f"错误    {err.code}")
         return False
-    except Exception:
+    except:
         traceback.print_exc(file=sys.stdout)
         return False
     finally:
@@ -501,7 +499,7 @@ def run_msg(cmd):
 def uninstall(device, package_name, root):
     if type(device) is not str: device = device.device
     dir_path = pull_apk(device, package_name, root)
-    if not dir_path: return False
+    if not dir_path: return False  # 备份文件时出现错误
     # cmd = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     cmd = ["adb", "-s", device, "shell", "pm", "uninstall", "-k", package_name]
