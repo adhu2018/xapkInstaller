@@ -349,7 +349,7 @@ def install_xapk(device, file_path, del_path, root) -> (list, subprocess.Complet
         else: print("找不到任意一种语言包！！")
         return install, run_msg(install)[0]
     else:
-        install, _ = install_apk(device, manifest["package_name"]+".apk", del_path, root)
+        install = install_apk(device, manifest["package_name"]+".apk", del_path, root)[0]
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"]=="EXTERNAL_STORAGE":
@@ -529,7 +529,7 @@ if __name__ == "__main__":
         print("    xapkInstaller ./abc/")
         print("    xapkInstaller abc.apkm abc.apks abc.xapk ./abc/")
         pause()
-    root, _ = os.path.split(sys.argv[0])
+    root = os.path.split(sys.argv[0])[0]
     if not root: root = os.getcwd()
     _len_ = len(sys.argv[1:])
     success = 0
