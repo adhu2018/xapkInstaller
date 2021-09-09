@@ -245,7 +245,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd") -> (list, int):
         print('INSTALL_FAILED_TEST_ONLY')
         print("正在修改安装参数重新安装，请等待...")
         return install_apk(device, file_path, del_path, root, "-t")
-    return install, status
+    return install, run
 
 def install_apkm(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     _, name_suffix = os.path.split(file_path)
@@ -298,7 +298,7 @@ def install_apks(file_path) -> (list, int):
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
     run = run_msg(install)[0]
     if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
-    return install, run.returncode
+    return install, run
 
 def install_xapk(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     """安装xapk文件"""
