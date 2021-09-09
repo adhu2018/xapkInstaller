@@ -167,7 +167,7 @@ def get_unpack_path(file_path) -> str:
     unpack_path = os.path.join(dir_path, name)
     return unpack_path
 
-def install_aab(file_path, del_path) -> (list, int):
+def install_aab(device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
     """正式版是需要签名的，配置好才能安装"""
     print(install_aab.__doc__)
     _, name_suffix = os.path.split(file_path)
@@ -190,7 +190,7 @@ def install_aab(file_path, del_path) -> (list, int):
     if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install_apks(del_path[-1])
 
-def install_apk(device, file_path, del_path, root, abc="-rtd") -> (list, int):
+def install_apk(device=None, file_path=None, del_path=None, root=None, abc="-rtd") -> (list, subprocess.CompletedProcess):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
@@ -247,7 +247,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd") -> (list, int):
         return install_apk(device, file_path, del_path, root, "-t")
     return install, run
 
-def install_apkm(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
+def install_apkm(device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
     _, name_suffix = os.path.split(file_path)
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = zipfile.ZipFile(file_path)
@@ -293,14 +293,14 @@ def install_apkm(device, file_path, del_path, root) -> (list, subprocess.Complet
     os.chdir(del_path[-1])
     return install, run_msg(install)[0]
 
-def install_apks(file_path) -> (list, int):
+def install_apks(device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
     run = run_msg(install)[0]
     if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install, run
 
-def install_xapk(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
+def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
     """安装xapk文件"""
     os.chdir(file_path)
     print("开始安装...")
