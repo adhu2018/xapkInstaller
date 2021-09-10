@@ -401,12 +401,12 @@ def main(root, one) -> bool:
                         package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                         if uninstall(device, package_name, root):
                             if len(install)==2:
-                                run = run_msg(install[0])[0]
+                                run, msg = run_msg(install[0])
                                 if run.returncode: sys.exit(msg)
-                                run = run_msg(install[1])[0]
+                                run, msg = run_msg(install[1])
                                 if run.returncode: sys.exit(msg)
                             else:
-                                run = run_msg(install)[0]
+                                run, msg = run_msg(install)
                                 if run.returncode: sys.exit(msg)
                         else:
                             sys.exit("备份文件时出现错误")
