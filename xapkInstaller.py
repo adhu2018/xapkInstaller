@@ -400,13 +400,8 @@ def main(root, one) -> bool:
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
                         package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                         if uninstall(device, package_name, root):
-                            if len(install)==2:
-                                run, msg = run_msg(install[0])
-                                if run.returncode: sys.exit(msg)
-                                run, msg = run_msg(install[1])
-                                if run.returncode: sys.exit(msg)
-                            else:
-                                run, msg = run_msg(install)
+                            for i in install:
+                                run, msg = run_msg(i)
                                 if run.returncode: sys.exit(msg)
                         else:
                             sys.exit("备份文件时出现错误")
