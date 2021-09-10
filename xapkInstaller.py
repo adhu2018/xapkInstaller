@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-# Python 自带
-import hashlib, json, os, shutil, subprocess, sys, traceback, zipfile
-import shlex
+import hashlib, json, os, shlex, shutil, subprocess, sys, traceback, zipfile
 import defusedxml.minidom as minidom
 # 第三方替代
 try:
@@ -98,7 +96,7 @@ class Device:
         self._sdk = int(_sdk)
         return self._sdk
 
-def check(root, del_path):
+def check(root, del_path) -> list:
     run = run_msg("adb devices")[0]
     _devices = tostr(run.stdout).strip().split("\n")[1:]
     devices = []
@@ -357,6 +355,15 @@ def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None
                 return [install, push], run_msg(push)[0]
             else: sys.exit(1)
 
+# installSelector["xxx"](device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess)
+installSuffix = [".aab", ".apk", ".apkm", ".apks", ".xapk"]
+installSelector = {}
+installSelector[".aab"] = install_aab
+installSelector[".apk"] = install_apk
+installSelector[".apkm"] = install_apkm
+installSelector[".apks"] = install_apks
+installSelector[".xapk"] = install_xapk
+
 def main(root, one) -> bool:
     os.chdir(root)
     _, name_suffix = os.path.split(one)
@@ -372,17 +379,14 @@ def main(root, one) -> bool:
     
     try:
         devices = check(root, del_path)
+        suffix = os.path.splitext(os.path.split(copy[1])[1])[1]
         
         for device in devices:
-            if copy[1].endswith(".apk"):
-                if not install_apk(device, copy[1], del_path, root)[0]: sys.exit(1)
-            elif copy[1].endswith(".xapk"):
+            if copy[1].endswith(".xapk"):
                 del_path.append(unpack(copy[1]))
                 os.chdir(del_path[-1])
-            elif copy[1].endswith(".apkm"): install_apkm(device, copy[1], del_path, root)
-            elif copy[1].endswith(".apks"): install_apks(copy[1])
-            elif copy[1].endswith(".aab"): install_aab(copy[1], del_path)
-            elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`apk/xapk/apks`安装包！")
+            elif suffix in installSuffix: installSelector[suffix](device, copy[1], del_path, root)
+            elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`{'/'.join(installSuffix)}`安装包！")
             
             if os.path.isdir(del_path[-1]) and os.path.exists(os.path.join(del_path[-1], "manifest.json")):
                 os.chdir(del_path[-1])
@@ -483,9 +487,12 @@ def restore(device, dir_path):
                 "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
                 run_msg(push)
     else:
-        install = ["adb", "-s", device, "install-multiple", "-rtd"]
-        install.extend(all)
-        run_msg(install)
+        if len(all)==0: sys.exit("备份文件夹为空！")
+        elif len(all)==1: main(root, all[0])
+        elif len(all)>1:
+            install = ["adb", "-s", device, "install-multiple", "-rtd"]
+            install.extend(all)
+            run_msg(install)
     os.chdir(root)
     
 def run_msg(cmd) -> (subprocess.CompletedProcess, str):
