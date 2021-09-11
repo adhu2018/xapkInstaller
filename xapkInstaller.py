@@ -58,20 +58,12 @@ class Device:
                 for j in i.strip().split(" "):
                     if j.endswith("dpi"):
                         _dpi = j
-        if _dpi == "120dpi":
-            self._dpi = "ldpi"
-        elif _dpi == "160dpi":
-            self._dpi = "mdpi"
-        elif _dpi == "240dpi":
-            self._dpi = "hdpi"
-        elif _dpi == "320dpi":
-            self._dpi = "xhdpi"
-        elif _dpi == "480dpi":
-            self._dpi = "xxhdpi"
-        elif _dpi == "640dpi":
-            self._dpi = "xxxhdpi"
-        elif 160<int(_dpi[:-3])<240:
+        __dpi = {"120dpi": "ldpi", "160dpi": "mdpi", "240dpi": "hdpi",
+                 "320dpi": "xhdpi", "480dpi": "xxhdpi", "640dpi": "xxxhdpi"}
+        if 160<int(_dpi[:-3])<240:
             self._dpi = "tvdpi"
+        else:
+            self._dpi = __dpi[_dpi]
         return self._dpi
     
     @property
