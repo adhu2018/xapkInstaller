@@ -89,12 +89,13 @@ class Device:
         return self._sdk
     
     def getsdk(self) -> int:
-        _sdk = run_msg(f"adb -s {self.device} shell getprop ro.build.version.sdk")[1].strip()
-        if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.product.build.version.sdk")[1].strip()
-        if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.system.build.version.sdk")[1].strip()
-        if not _sdk: _sdk = run_msg(f"adb -s {self.device} shell getprop ro.system_ext.build.version.sdk")[1].strip()
-        self._sdk = int(_sdk)
-        return self._sdk
+        __sdk = ["ro.build.version.sdk", "ro.product.build.version.sdk",
+                 "ro.system.build.version.sdk", "ro.system_ext.build.version.sdk"]
+        for i in __sdk:
+            _sdk = run_msg(f"adb -s {self.device} shell getprop {i}")[1].strip()
+            if _sdk:
+                self._sdk = int(_sdk)
+                return self._sdk
 
 def check(root, del_path) -> list:
     run = run_msg("adb devices")[0]
