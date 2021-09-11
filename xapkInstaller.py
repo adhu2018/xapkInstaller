@@ -219,8 +219,7 @@ def install_apk(device=None, file_path=None, del_path=None, root=None, abc="-rtd
     
     install = ["adb", "-s", device.device, "install", abc, name_suffix]
     run, msg = run_msg(install)
-    status = run.returncode
-    if status:
+    if run.returncode:
         if abc=="-rtd" and "argument expected" in msg:
             print('No argument expected after "-rtd"')
             print("正在修改安装参数重新安装，请等待...")
