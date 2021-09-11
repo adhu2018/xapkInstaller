@@ -31,19 +31,19 @@ class Device:
     @property
     def abi(self) -> str:
         if not self._abi: self.getabi()
-        return self._abi.strip()
+        return self._abi
     
     def getabi(self) -> str:
-        _, self._abi = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abi")
+        self._abi = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abi")[1].strip()
         return self._abi
     
     @property
     def abilist(self) -> list:
         if not self._abilist: self.getabilist()
-        return self._abilist.strip().split(",")
+        return self._abilist
     
     def getabilist(self) -> str:
-        _, self._abilist = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abilist")
+        self._abilist = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abilist")[1].strip().split(",")
         return self._abilist
     
     @property
@@ -69,10 +69,10 @@ class Device:
     @property
     def locale(self) -> str:
         if not self._locale: self.getlocale()
-        return self._locale.strip()
+        return self._locale
     
     def getlocale(self) -> str:
-        _, self._locale = run_msg(f"adb -s {self.device} shell getprop ro.product.locale")
+        self._locale = run_msg(f"adb -s {self.device} shell getprop ro.product.locale")[1].strip()
         return self._locale
     
     @property
