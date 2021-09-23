@@ -14,8 +14,8 @@ from axmlparserpy import axmlprinter
 
 _abi = ["armeabi_v7a", "arm64_v8a", "x86", "x86_64"]
 _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
-    "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl", "tr",
-    "vi", "zh"]
+             "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl",
+             "tr", "vi", "zh"]
 
 tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
 
