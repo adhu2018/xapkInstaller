@@ -188,10 +188,11 @@ def install_apk(device=None, file_path=None, del_path=None, root=None, abc="-rtd
     print(manifest)
     if type(device) is not str: device = device.device
     _, msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", manifest["package_name"]])
-    versionCode = 0
+    versionCode = -1
     for i in msg.split("\n"):
         if "versionCode" in i:
             versionCode = int(i.strip().split("=")[1].split(" ")[0])
+    if versionCode == -1: input("警告：首次安装需要在手机上点击允许安装！按回车继续...")
     if manifest["versionCode"] < versionCode:
         if input("警告：降级安装？请确保文件无误！(y/N)").lower() != "y": sys.exit("降级安装，用户取消安装。")
     elif manifest["versionCode"] == versionCode:
