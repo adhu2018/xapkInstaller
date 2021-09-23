@@ -13,6 +13,7 @@ from axmlparserpy import axmlprinter
 
 
 _abi = ["armeabi_v7a", "arm64_v8a", "x86", "x86_64"]
+_drawableList = ["xxxhdpi", "xxhdpi", "xhdpi", "hdpi", "tvdpi", "mdpi", "ldpi", "nodpi"]
 _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
              "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl",
              "tr", "vi", "zh"]
@@ -24,6 +25,7 @@ class Device:
         self._abi = None
         self._abilist = None
         self._dpi = None
+        self._drawable = None
         self._locale = None
         self._sdk = None
         self.device = device
@@ -47,24 +49,39 @@ class Device:
         return self._abilist
     
     @property
-    def dpi(self) -> str:
+    def dpi(self) -> int:
         if not self._dpi: self.getdpi()
         return self._dpi
     
-    def getdpi(self) -> str:
+    def getdpi(self) -> int:
         _, _dpi = run_msg(f"adb -s {self.device} shell dumpsys window displays")
         for i in _dpi.strip().split("\n"):
             if i.find("dpi")>=0:
                 for j in i.strip().split(" "):
                     if j.endswith("dpi"):
-                        _dpi = j
-        __dpi = {"120dpi": "ldpi", "160dpi": "mdpi", "240dpi": "hdpi",
-                 "320dpi": "xhdpi", "480dpi": "xxhdpi", "640dpi": "xxxhdpi"}
-        if 160<int(_dpi[:-3])<240:
-            self._dpi = "tvdpi"
-        else:
-            self._dpi = __dpi[_dpi]
+                        self._dpi = int(j[:-3])
         return self._dpi
+    
+    @property
+    def drawable(self) -> list:
+        if not self._drawable: self.getdrawable()
+        return self._drawable
+    
+    def getdrawable(self) -> list:
+        _dpi = int((self.dpi+39)/40)
+        if 0<=_dpi<=3:
+            self._drawable = ["ldpi"]
+        elif 3<_dpi<=4:
+            self._drawable = ["mdpi"]
+        elif 4<_dpi<=6:
+            self._drawable = ["tvdpi", "hdpi"]
+        elif 6<_dpi<=8:
+            self._drawable = ["xhdpi"]
+        elif 8<_dpi<=12:
+            self._drawable = ["xxhdpi"]
+        elif 12<_dpi<=16:
+            self._drawable = ["xxxhdpi"]
+        return self._drawable
     
     @property
     def locale(self) -> str:
@@ -106,6 +123,19 @@ def check(root, del_path) -> list:
             sys.exit("用户取消安装！")
     return devices
 
+def checkVersionCode(device: str, package_name: str, fileVersionCode: int, versionCode: int=-1) -> None:
+    if type(device) is not str: device = device.device
+    if type(fileVersionCode) is not int: fileVersionCode = int(fileVersionCode)
+    msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", package_name])[1]
+    for i in msg.split("\n"):
+        if "versionCode" in i:
+            versionCode = int(i.strip().split("=")[1].split(" ")[0])
+    if versionCode == -1: input("警告：首次安装需要在手机上点击允许安装！按回车继续...")
+    if fileVersionCode < versionCode:
+        if input("警告：降级安装？请确保文件无误！(y/N)").lower() != "y": sys.exit("降级安装，用户取消安装。")
+    elif fileVersionCode == versionCode:
+        if input("警告：版本一致！请确保文件无误！(y/N)").lower() != "y": sys.exit("版本一致，用户取消安装。")
+    
 def delPath(path):
     if not os.path.exists(path): return
     print(f"删除    {path}")
@@ -186,18 +216,7 @@ def install_apk(device=None, file_path=None, del_path=None, root=None, abc="-rtd
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
     print(manifest)
-    if type(device) is not str: device = device.device
-    _, msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", manifest["package_name"]])
-    versionCode = -1
-    for i in msg.split("\n"):
-        if "versionCode" in i:
-            versionCode = int(i.strip().split("=")[1].split(" ")[0])
-    if versionCode == -1: input("警告：首次安装需要在手机上点击允许安装！按回车继续...")
-    if manifest["versionCode"] < versionCode:
-        if input("警告：降级安装？请确保文件无误！(y/N)").lower() != "y": sys.exit("降级安装，用户取消安装。")
-    elif manifest["versionCode"] == versionCode:
-        if input("警告：版本一致！请确保文件无误！(y/N)").lower() != "y": sys.exit("版本一致，用户取消安装。")
-    
+    checkVersionCode(device, manifest["package_name"], manifest["versionCode"])
     if type(device) is not Device: device = Device(device)
     if device.sdk < manifest["min_sdk_version"]: sys.exit("安装失败：安卓版本过低！")
     
@@ -248,6 +267,7 @@ def install_apkm(device=None, file_path=None, del_path=None, root=None, abc=None
     file_list = zip_file.namelist()
     if type(device) is not Device: device = Device(device)
     if device.sdk < int(info["min_api"]): sys.exit("安装失败：安卓版本过低！")
+    checkVersionCode(device, info["pname"], info["versioncode"])
     install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
     abi = [ f"split_config.{i}.apk" for i in _abi ]
     language = [ f"split_config.{i}.apk" for i in _language ]
@@ -257,8 +277,9 @@ def install_apkm(device=None, file_path=None, del_path=None, root=None, abc=None
     # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
     for i in file_list:
         if i==f"split_config.{device.abi.replace('-', '_')}.apk": config["abi"] = i
-        if i==f"split_config.{device.dpi}.apk": config["dpi"] = i
-        elif i==f"split_config.{device.locale.split('-')[0]}.apk": config["locale"] = i
+        for d in device.drawable:
+            if i==f"split_config.{d}.apk": config["drawable"] = i
+        if i==f"split_config.{device.locale.split('-')[0]}.apk": config["locale"] = i
         elif i in abi: config[i.split(".")[1]] = i
         elif i.find("dpi.apk")>=0: config[i.split(".")[1]] = i
         elif i in language: config["language"].append(i)
@@ -269,9 +290,9 @@ def install_apkm(device=None, file_path=None, del_path=None, root=None, abc=None
         for i in device.abilist:
             i = i.replace('-', '_')
             if config.get(i): install.append(config[i]); break
-    if config.get("dpi"): install.append(config["dpi"])
+    if config.get("drawable"): install.append(config["drawable"])
     else:
-        for i in ["ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
+        for i in _drawableList:
             if config.get(i): install.append(config[i]); break
     if config.get("locale"): install.append(config["locale"])
     elif config.get("language"):
@@ -298,6 +319,7 @@ def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None
     if not os.path.isfile("manifest.json"):
         sys.exit(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
     manifest = read_json("manifest.json")
+    checkVersionCode(device, manifest["version_code"])
     if type(device) is not Device: device = Device(device)
     if not manifest.get("expansions"):
         split_apks = manifest["split_apks"]
@@ -315,8 +337,9 @@ def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None
         # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
         for i in split_apks:
             if i["id"]==f"config.{device.abi.replace('-', '_')}": config["abi"] = i["file"]
-            if i["id"]==f"config.{device.dpi}": config["dpi"] = i["file"]
-            elif i["id"]==f"config.{device.locale.split('-')[0]}": config["locale"] = i["file"]
+            for d in device.drawable:
+                if i==f"split_config.{d}.apk": config["drawable"] = i
+            if i["id"]==f"config.{device.locale.split('-')[0]}": config["locale"] = i["file"]
             elif i["id"] in abi: config[i["id"].split(".")[1]] = i["file"]
             elif i["id"].endswith("dpi"): config[i["id"].split(".")[1]] = i["file"]
             elif i["id"] in language: config["language"].append(i["file"])
@@ -328,9 +351,9 @@ def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None
             for i in device.abilist:
                 i = i.replace('-', '_')
                 if config.get(i): install.append(config[i]); break
-        if config.get("dpi"): install.append(config["dpi"])
+        if config.get("drawable"): install.append(config["drawable"])
         else:
-            for i in ["ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "tvdpi"]:
+            for i in _drawableList:
                 if config.get(i): install.append(config[i]); break
         if config.get("locale"): install.append(config["locale"])
         elif config.get("language"):
