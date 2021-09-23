@@ -377,18 +377,19 @@ def main(root, one) -> bool:
             if copy[1].endswith(".xapk"):
                 del_path.append(unpack(copy[1]))
                 os.chdir(del_path[-1])
-            elif suffix in installSuffix: installSelector[suffix](device, copy[1], del_path, root)
+            elif suffix in installSuffix:
+                install, run = installSelector[suffix](device, copy[1], del_path, root)
+                if run.returncode:
+                    err = tostr(run.stderr)
+                    printerr(err)
+                    sys.exit(err)
             elif os.path.isfile(copy[1]): sys.exit(f"{copy[1]!r}不是`{'/'.join(installSuffix)}`安装包！")
             
             if os.path.isdir(del_path[-1]) and os.path.exists(os.path.join(del_path[-1], "manifest.json")):
                 os.chdir(del_path[-1])
                 install, run = install_xapk(device, del_path[-1], del_path, root)
                 if run.returncode:
-                    err = tostr(run.stderr)
-                    if "INSTALL_FAILED_VERSION_DOWNGRADE" in err: print("警告：降级安装？请确保文件无误！")
-                    elif "INSTALL_FAILED_USER_RESTRICTED: Install canceled by user" in err: sys.exit("用户取消安装或未确认安装！初次安装需要手动确认！！")
-                    elif "INSTALL_FAILED_ALREADY_EXISTS" in err: sys.exit("已安装包名和版本号一致的应用！！")
-                    else: print(err)
+                    printerr(tostr(run.stderr))
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
                         package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                         if uninstall(device, package_name, root):
@@ -403,7 +404,7 @@ def main(root, one) -> bool:
         if err.code==1: print("错误    安装失败：未知错误！请提供文件进行适配！")
         else: print(f"错误    {err.code}")
         return False
-    except:
+    except Exception:
         traceback.print_exc(file=sys.stdout)
         return False
     finally:
@@ -427,6 +428,12 @@ def md5(*_str) -> str:
 def pause():
     input("按回车键继续...")
     sys.exit(0)
+
+def printerr(err: str) -> None:
+    if "INSTALL_FAILED_VERSION_DOWNGRADE" in err: print("警告：降级安装？请确保文件无误！")
+    elif "INSTALL_FAILED_USER_RESTRICTED: Install canceled by user" in err: sys.exit("用户取消安装或未确认安装！初次安装需要手动确认！！")
+    elif "INSTALL_FAILED_ALREADY_EXISTS" in err: sys.exit("已安装包名和版本号一致的应用！！")
+    else: print(err)
 
 def pull_apk(device, package, root) -> str:
     print("正在备份安装包...")
@@ -501,7 +508,7 @@ def uninstall(device, package_name, root):
     run, msg = run_msg(cmd)
     try:
         if run.returncode: restore(device, dir_path, root)
-    except:
+    except Exception:
         sys.exit(f"恢复时出现未知错误！请尝试手动操作并反馈该问题！旧版安装包路径：{dir_path}")
     return run
 
@@ -531,7 +538,7 @@ if __name__ == "__main__":
         for i, one in enumerate(sys.argv[1:]):
             print(f"正在安装第{i+1}/{_len_}个...")
             if main(root, one): success += 1
-    except:
+    except Exception:
         traceback.print_exc(file=sys.stdout)
     finally:
         print(f"共{_len_}个，成功安装了{success}个。")
