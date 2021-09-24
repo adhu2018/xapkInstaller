@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 import hashlib, json, os, shlex, shutil, subprocess, sys, traceback, zipfile
-import defusedxml.minidom as minidom
-# 第三方替代
 try:
     import regex as re
 except ImportError:
     import re
-# 第三方
 import chardet
 import yaml
 from axmlparserpy import axmlprinter
+import defusedxml.minidom as minidom
 
 
 _abi = ["armeabi_v7a", "arm64_v8a", "x86", "x86_64"]
