@@ -10,7 +10,7 @@ from axmlparserpy import axmlprinter
 import defusedxml.minidom as minidom
 
 
-_abi = ["armeabi_v7a", "arm64_v8a", "x86", "x86_64"]
+_abi = ["armeabi_v7a", "arm64_v8a", "armeabi", "x86_64", "x86", "mips64", "mips"]
 _drawableList = ["xxxhdpi", "xxhdpi", "xhdpi", "hdpi", "tvdpi", "mdpi", "ldpi", "nodpi"]
 _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
              "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl",
