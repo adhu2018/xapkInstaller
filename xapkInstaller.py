@@ -104,7 +104,7 @@ class Device:
                 self._sdk = int(_sdk)
                 return self._sdk
 
-def check(root, del_path) -> list:
+def check() -> list:
     run = run_msg("adb devices")[0]
     _devices = tostr(run.stdout).strip().split("\n")[1:]
     devices = []
