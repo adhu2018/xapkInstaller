@@ -325,6 +325,7 @@ def install_multiple_base(device=None, file_list=None, del_path=None, root=None,
             _abandon(SESSION_ID)
             sys.exit(msg)
         else: print(msg)
+        return run
     
     def _create(device, info) -> str:
         # pm install-create
@@ -340,7 +341,7 @@ def install_multiple_base(device=None, file_list=None, del_path=None, root=None,
             run, msg = run_msg(["adb", "-s", device, "shell", "rm", i["path"]])
             if run.returncode: sys.exit(msg)
     
-    def _push(device, file_list) -> dict:
+    def _push(device, file_list) -> list:
         info = []
         for f in file_list:
             info.append({"name": "_".join(f.rsplit(".")[:-1]), "path": "/data/local/tmp/"+f})
@@ -363,8 +364,9 @@ def install_multiple_base(device=None, file_list=None, del_path=None, root=None,
     info = _push(device, file_list)
     SESSION_ID = _create(device, info)
     _write(device, SESSION_ID, info)
-    _commit(device, SESSION_ID)
+    run = _commit(device, SESSION_ID)
     _del(device, info)
+    return info, run
 
 def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
     """安装xapk文件"""
