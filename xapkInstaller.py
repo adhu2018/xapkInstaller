@@ -375,7 +375,7 @@ def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None
     if not os.path.isfile("manifest.json"):
         sys.exit(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
     manifest = read_json("manifest.json")
-    checkVersionCode(device, manifest["version_code"])
+    checkVersionCode(device, manifest["package_name"], manifest["version_code"])
     if type(device) is not Device: device = Device(device)
     if not manifest.get("expansions"):
         split_apks = manifest["split_apks"]
@@ -450,7 +450,7 @@ def main(root, one) -> bool:
     else: shutil.copytree(copy[0], copy[1])
     
     try:
-        devices = check(root, del_path)
+        devices = check()
         suffix = os.path.splitext(os.path.split(copy[1])[1])[1]
         
         for device in devices:
