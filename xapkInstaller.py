@@ -133,7 +133,31 @@ def checkVersionCode(device: str, package_name: str, fileVersionCode: int, versi
         if input("警告：降级安装？请确保文件无误！(y/N)").lower() != "y": sys.exit("降级安装，用户取消安装。")
     elif fileVersionCode == versionCode:
         if input("警告：版本一致！请确保文件无误！(y/N)").lower() != "y": sys.exit("版本一致，用户取消安装。")
-    
+
+def config_abi(config, install, abilist):
+    if config.get("abi"): install.append(config["abi"])
+    else:
+        for i in abilist:
+            i = i.replace('-', '_')
+            if config.get(i): install.append(config[i]); break
+    return config, install
+
+def config_drawable(config, install):
+    if config.get("drawable"): install.append(config["drawable"])
+    else:
+        for i in _drawableList:
+            if config.get(i): install.append(config[i]); break
+    return config, install
+
+def config_locale(config, install):
+    if config.get("locale"): install.append(config["locale"])
+    elif config.get("language"):
+        # 如果自动匹配语言不成功，就添加列表中第一个语言
+        print(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
+        install.append(config["language"][0])
+    else: print("找不到任意一种语言包！！")
+    return config, install
+
 def delPath(path):
     if not os.path.exists(path): return
     print(f"删除    {path}")
@@ -143,7 +167,9 @@ def delPath(path):
 def dump(file_path, del_path) -> dict:
     run, msg = run_msg(["aapt", "dump", "badging", file_path])
     if msg: print(msg)
-    if run.returncode: return dump_py(file_path, del_path)
+    if run.returncode:
+        print("未配置aapt或aapt存在错误！")
+        return dump_py(file_path, del_path)
     manifest = {}
     manifest["native_code"] = []
     for line in msg.split("\n"):
@@ -151,12 +177,12 @@ def dump(file_path, del_path) -> dict:
         elif "targetSdkVersion:" in line: manifest["target_sdk_version"] = int(line.strip().split("'")[1])
         elif "native-code:" in line: manifest["native_code"].extend(re.findall(r"'([^,']+)'",line))
         elif "package: name=" in line:
-            manifest["package_name"] = line.split("'")[1]
-            manifest["versionCode"] = int(line.split("'")[3])
+            line = line.strip().split("'")
+            manifest["package_name"] = line[1]
+            manifest["versionCode"] = int(line[3])
     return manifest
 
 def dump_py(file_path, del_path) -> dict:
-    print("未配置aapt或aapt存在错误！")
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = zipfile.ZipFile(file_path)
     upfile = "AndroidManifest.xml"
@@ -165,11 +191,13 @@ def dump_py(file_path, del_path) -> dict:
     ap = axmlprinter.AXMLPrinter(data)
     buff = minidom.parseString(ap.getBuff())
     manifest = {}
-    manifest["package_name"] = buff.getElementsByTagName("manifest")[0].getAttribute("package")
-    manifest["versionCode"] = int(buff.getElementsByTagName("manifest")[0].getAttribute("android:versionCode"))
-    manifest["min_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:minSdkVersion"))
+    _manifest = buff.getElementsByTagName("manifest")[0]
+    uses_sdk = buff.getElementsByTagName("uses-sdk")[0]
+    manifest["package_name"] = _manifest.getAttribute("package")
+    manifest["versionCode"] = int(_manifest.getAttribute("android:versionCode"))
+    manifest["min_sdk_version"] = int(uses_sdk.getAttribute("android:minSdkVersion"))
     try:
-        manifest["target_sdk_version"] = int(buff.getElementsByTagName("uses-sdk")[0].getAttribute("android:targetSdkVersion"))
+        manifest["target_sdk_version"] = int(uses_sdk.getAttribute("android:targetSdkVersion"))
     except ValueError:
         print("`targetSdkVersion` no found.")
     file_list = zip_file.namelist()
@@ -178,6 +206,11 @@ def dump_py(file_path, del_path) -> dict:
         if i.startswith("lib/"): native_code.append(i.split("/")[1])
     manifest["native_code"] = list(set(native_code))
     return manifest
+
+def findabi(native_code, abilist) -> bool:
+    for i in abilist:
+        if i in native_code: return True
+    return False
 
 def get_unpack_path(file_path) -> str:
     """获取文件解压路径"""
@@ -226,11 +259,7 @@ def install_apk(device=None, file_path=None, del_path=None, root=None, abc="-rtd
     abilist = device.abilist
     
     try:
-        def findabi(native_code) -> bool:
-            for i in abilist:
-                if i in native_code: return True
-            return False
-        if manifest.get("native_code") and not findabi(manifest["native_code"]):
+        if manifest.get("native_code") and not findabi(manifest["native_code"], abilist):
             sys.exit(f"安装失败：{manifest['native_code']}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
     except UnboundLocalError:
         pass
@@ -283,21 +312,7 @@ def install_apkm(device=None, file_path=None, del_path=None, root=None, abc=None
         elif i in language: config["language"].append(i)
         elif i.endswith(".apk"): install.append(i)
     print(config)
-    if config.get("abi"): install.append(config["abi"])
-    else:
-        for i in device.abilist:
-            i = i.replace('-', '_')
-            if config.get(i): install.append(config[i]); break
-    if config.get("drawable"): install.append(config["drawable"])
-    else:
-        for i in _drawableList:
-            if config.get(i): install.append(config[i]); break
-    if config.get("locale"): install.append(config["locale"])
-    elif config.get("language"):
-        # 如果自动匹配语言不成功，就添加列表中第一个语言
-        print(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
-        install.append(config["language"][0])
-    else: print("找不到任意一种语言包！！")
+    config, install = config_locale(config_drawable(config_abi(config, install, device.abilist)))
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
     os.chdir(del_path[-1])
@@ -402,21 +417,7 @@ def install_xapk(device=None, file_path=None, del_path=None, root=None, abc=None
             elif i["id"] in other: pass
             else: install.append(i["file"])
         print(config)
-        if config.get("abi"): install.append(config["abi"])
-        else:
-            for i in device.abilist:
-                i = i.replace('-', '_')
-                if config.get(i): install.append(config[i]); break
-        if config.get("drawable"): install.append(config["drawable"])
-        else:
-            for i in _drawableList:
-                if config.get(i): install.append(config[i]); break
-        if config.get("locale"): install.append(config["locale"])
-        elif config.get("language"):
-            # 如果自动匹配语言不成功，就添加列表中第一个语言
-            print(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
-            install.append(config["language"][0])
-        else: print("找不到任意一种语言包！！")
+        config, install = config_locale(config_drawable(config_abi(config, install, device.abilist)))
         return install, run_msg(install)[0]
     else:
         install = install_apk(device, manifest["package_name"]+".apk", del_path, root)[0]
