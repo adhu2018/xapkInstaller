@@ -319,10 +319,15 @@ def install_apkm(device=None, file_path=None, del_path=None, root=None, abc=None
     return install, run_msg(install)[0]
 
 def install_apks(device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
+    os.chdir(root)
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
-    run = run_msg(install)[0]
-    if run.returncode: sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
+    run, msg = run_msg(install)
+    if run.returncode:
+        if '[SCREEN_DENSITY]' in msg:
+            sys.exit("Missing APKs for [SCREEN_DENSITY] dimensions in the module 'base' for the provided device.")
+        else:
+            sys.exit("bundletool 可在 https://github.com/google/bundletool/releases 下载，下载后重命名为bundletool.jar并将其放置在xapkInstaller同一文件夹即可。")
     return install, run
 
 def install_multiple_base(device=None, file_list=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
