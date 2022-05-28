@@ -117,7 +117,7 @@ def check() -> list:
     elif len(devices)==0: sys.exit("安装失败：手机未连接电脑！")
     elif len(devices)==1: pass
     elif len(devices)>1:
-        if not input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() in ["y", "Y"]:
+        if input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() != "y":
             sys.exit("用户取消安装！")
     return devices
 
@@ -476,7 +476,7 @@ def main(root, one) -> bool:
                 install, run = install_xapk(device, del_path[-1], del_path, root)
                 if run.returncode:
                     printerr(tostr(run.stderr))
-                    if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(yes/no)").lower() in ["yes", "y"]:
+                    if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(y/N)").lower() == 'y':
                         package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                         if uninstall(device, package_name, root):
                             for i in install:
