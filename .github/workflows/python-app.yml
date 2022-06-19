@@ -5,6 +5,8 @@ name: Python application
 
 on:
   push:
+    tags:
+      - "*.*.*"
 
 permissions:
   contents: read
