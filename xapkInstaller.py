@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
-import hashlib, json, os, shlex, shutil, subprocess, sys, traceback, zipfile
-try:
-    import regex as re
-except ImportError:
-    import re
-import chardet
-import yaml
-from axmlparserpy import axmlprinter
-import defusedxml.minidom as minidom
+from hashlib import md5 as _md5
+from json import load as json_load
+import os
+from shlex import split as shlex_split
+import shutil, subprocess, sys
+from traceback import print_exc
+from zipfile import ZipFile
+from re import findall as re_findall
+from chardet import detect
+from yaml import safe_load
+from axmlparserpy.axmlprinter import AXMLPrinter
+from defusedxml.minidom import parseString
 
 
 _abi = ["armeabi_v7a", "arm64_v8a", "armeabi", "x86_64", "x86", "mips64", "mips"]
@@ -16,7 +19,7 @@ _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
              "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl",
              "tr", "vi", "zh"]
 
-tostr = lambda bytes_: bytes_.decode(chardet.detect(bytes_)["encoding"])
+tostr = lambda bytes_: bytes_.decode(detect(bytes_)["encoding"])
 
 class Device:
     def __init__(self, device):
@@ -175,7 +178,7 @@ def dump(file_path, del_path) -> dict:
     for line in msg.split("\n"):
         if "sdkVersion:" in line: manifest["min_sdk_version"] = int(line.strip().split("'")[1])
         elif "targetSdkVersion:" in line: manifest["target_sdk_version"] = int(line.strip().split("'")[1])
-        elif "native-code:" in line: manifest["native_code"].extend(re.findall(r"'([^,']+)'",line))
+        elif "native-code:" in line: manifest["native_code"].extend(re_findall(r"'([^,']+)'",line))
         elif "package: name=" in line:
             line = line.strip().split("'")
             manifest["package_name"] = line[1]
@@ -184,12 +187,12 @@ def dump(file_path, del_path) -> dict:
 
 def dump_py(file_path, del_path) -> dict:
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
-    zip_file = zipfile.ZipFile(file_path)
+    zip_file = ZipFile(file_path)
     upfile = "AndroidManifest.xml"
     zip_file.extract(upfile, del_path[-1])
     with open(os.path.join(del_path[-1], upfile), "rb") as f: data = f.read()
-    ap = axmlprinter.AXMLPrinter(data)
-    buff = minidom.parseString(ap.getBuff())
+    ap = AXMLPrinter(data)
+    buff = parseString(ap.getBuff())
     manifest = {}
     _manifest = buff.getElementsByTagName("manifest")[0]
     uses_sdk = buff.getElementsByTagName("uses-sdk")[0]
@@ -287,7 +290,7 @@ def install_apk(device=None, file_path=None, del_path=None, root=None, abc="-rtd
 def install_apkm(device=None, file_path=None, del_path=None, root=None, abc=None) -> (list, subprocess.CompletedProcess):
     _, name_suffix = os.path.split(file_path)
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
-    zip_file = zipfile.ZipFile(file_path)
+    zip_file = ZipFile(file_path)
     upfile = "info.json"
     zip_file.extract(upfile, del_path[-1])
     info = read_json(os.path.join(del_path[-1], upfile))
@@ -491,7 +494,7 @@ def main(root, one) -> bool:
         else: print(f"错误    {err.code}")
         return False
     except Exception:
-        traceback.print_exc(file=sys.stdout)
+        print_exc(file=sys.stdout)
         return False
     finally:
         os.chdir(root)
@@ -503,7 +506,7 @@ def md5(*_str) -> str:
     if type(t) is not str: t = str(t)
     encode_type = "utf-8"
     if len(_str) > 1: encode_type = _str[1]
-    m = hashlib.md5()
+    m = _md5()
     try:
         t = t.encode(encode_type)
     except LookupError:
@@ -543,11 +546,11 @@ def pull_apk(device, package, root) -> str:
 
 def read_config(yaml_file) -> dict:
     with open(yaml_file, "rb") as f: data = f.read()
-    return yaml.safe_load(tostr(data))
+    return safe_load(tostr(data))
 
 def read_json(file) -> dict:
     with open(file) as f:
-        return json.load(f)
+        return json_load(f)
 
 def restore(device, dir_path):
     print("开始恢复...")
@@ -577,7 +580,7 @@ def restore(device, dir_path):
     
 def run_msg(cmd) -> (subprocess.CompletedProcess, str):
     print(cmd)
-    if type(cmd) is str: cmd = shlex.split(cmd)
+    if type(cmd) is str: cmd = shlex_split(cmd)
     run = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if run.stderr: return run, tostr(run.stderr)
     if run.stdout: return run, tostr(run.stdout)
@@ -625,7 +628,7 @@ if __name__ == "__main__":
             print(f"正在安装第{i+1}/{_len_}个...")
             if main(root, one): success += 1
     except Exception:
-        traceback.print_exc(file=sys.stdout)
+        print_exc(file=sys.stdout)
     finally:
         print(f"共{_len_}个，成功安装了{success}个。")
         pause()
