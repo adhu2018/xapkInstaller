@@ -36,8 +36,19 @@ jobs:
         pip install pyinstaller
         pyinstaller -F xapkInstaller.py -i NONE
         copy dist\xapkInstaller.exe xapkInstaller.exe
+    - name: changelog
+      shell: python
+      run: |
+        # -*- coding: utf-8 -*-
+        import re
+        with open('CHANGELOG.txt', 'r', encoding='utf8') as f:
+          data = f.read()
+        list1 = re.split('\d+\.\d+\..+', data)
+        with open('Release-CHANGELOG.txt', 'w+', encoding='utf8') as f:
+          f.write(list1[1].strip())
     - name: upload
       uses: softprops/action-gh-release@v1
       with:
         files: xapkInstaller.exe
+        body_path: Release-CHANGELOG.txt
         
