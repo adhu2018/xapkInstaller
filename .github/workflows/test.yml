@@ -42,7 +42,7 @@ jobs:
         import re
         with open('CHANGELOG.txt', 'r', encoding='utf8') as f:
           data = f.read()
-        list1 = re.split('\d+\.\d+\.\d+.+', data)
+        list1 = re.split('\d+\.\d+\.\d+.*', data)
         with open('Release-CHANGELOG.txt', 'w+', encoding='utf8') as f:
           f.write(list1[1].strip())
     - name: print changelog
