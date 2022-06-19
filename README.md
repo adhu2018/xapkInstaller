@@ -15,10 +15,7 @@
 - `*.apkm` 需要 `adb`  
 - `*.apks` 需要 `java`, `bundletool.jar`  
 
-使用以下语句进行编译：  
-```powershell
-pyinstaller -F xapkInstaller.py -i NONE --clean
-```
+编译：Windows下直接运行`build.bat`，需要python环境。  
 或下载[已编译版本](https://github.com/adhu2018/xapkInstaller/releases/latest)。  
 
 使用方法：  

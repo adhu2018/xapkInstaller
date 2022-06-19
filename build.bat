@@ -1,0 +1,1 @@
+python -m venv venv&cd venv\Scripts&activate&cd ../..&pip install -r requirements.txt&pip install pyinstaller&pyinstaller -F xapkInstaller.py -i NONE --clean
