@@ -45,13 +45,12 @@ jobs:
         list1 = re.split('\d+\.\d+\.\d+.*', data)
         with open('Release-CHANGELOG.txt', 'w+', encoding='utf8') as f:
           f.write(list1[1].strip())
-        import os
-        import time
-        os.environ['xapkInstaller_version'] = time.strftime('0.%y.%m%d%H')
     - name: print changelog
       run: |
         chcp 65001
         type Release-CHANGELOG.txt
+    - run: |
+      python -c "print('xapkInstaller_version={}'.format(__import__('time').strftime('0.%y.%m%d%H')))" >> $GITHUB_ENV
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
