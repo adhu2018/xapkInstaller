@@ -1,7 +1,7 @@
 # xapkInstaller
 小米安装xapk需要关闭MIUI优化，但是这样会导致软件的权限设置被重置，被搞烦了，所以就有了这个。。  
 
-身在福中不知福。。 [SAI](https://github.com/Aefyr/SAI) 是支持 [Shizuku](https://github.com/RikkaApps/Shizuku) 模式的，本项目将停止维护。  
+身在福中不知福。。 [SAI](https://github.com/Aefyr/SAI) 是支持 [Shizuku](https://github.com/RikkaApps/Shizuku) 模式的，~~本项目将停止维护~~。  
 
 环境配置：  
 
@@ -15,8 +15,13 @@
 - `*.apkm` 需要 `adb`  
 - `*.apks` 需要 `java`, `bundletool.jar`  
 
-编译：Windows下直接运行`build.bat`，需要python环境。  
+编译：
+
+- 本地编译：Windows下直接运行`build.bat`，需要python环境。  
+- 在线编译： [Actions](https://github.com/adhu2018/xapkInstaller/actions) 。
+
 或下载[已编译版本](https://github.com/adhu2018/xapkInstaller/releases/latest)。  
+>`Releases` 中由 `github-actions` 发布的版本为 [actions](https://github.com/adhu2018/xapkInstaller/actions) 自动编译发布，有问题请[反馈](https://github.com/adhu2018/xapkInstaller/issues/new)，如果还有后续版本，将会以这种形式发布。
 
 使用方法：  
 - 设置默认打开方式（推荐）：选中安装包，右键，打开方式，选择其他应用，找到xapkInstaller。下次直接双击安装包就行了。  
