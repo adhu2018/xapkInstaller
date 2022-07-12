@@ -269,7 +269,7 @@ def get_unpack_path(file_path) -> str:
     return unpack_path
 
 
-def install_aab(device, file_path, del_path, root, abc) -> (list, subprocess.CompletedProcess):
+def install_aab(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     """正式版是需要签名的，配置好才能安装"""
     print(install_aab.__doc__)
     _, name_suffix = os.path.split(file_path)
@@ -346,7 +346,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd") -> (list, subproc
     return install, run
 
 
-def install_apkm(device, file_path, del_path, root, abc) -> (list, subprocess.CompletedProcess):
+def install_apkm(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     _, name_suffix = os.path.split(file_path)
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
@@ -390,7 +390,7 @@ def install_apkm(device, file_path, del_path, root, abc) -> (list, subprocess.Co
     return install, run_msg(install)[0]
 
 
-def install_apks(device, file_path, del_path, root, abc) -> (list, subprocess.CompletedProcess):
+def install_apks(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     os.chdir(root)
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
@@ -406,7 +406,7 @@ def install_apks(device, file_path, del_path, root, abc) -> (list, subprocess.Co
     return install, run
 
 
-def install_multiple_base(device, file_list, del_path, root, abc) -> (list, subprocess.CompletedProcess):
+def install_multiple_base(device, file_list, del_path, root) -> (list, subprocess.CompletedProcess):
     """备用"""
     def _abandon(device, SESSION_ID):
         # pm install-abandon SESSION_ID
@@ -471,7 +471,7 @@ def install_multiple_base(device, file_list, del_path, root, abc) -> (list, subp
     return info, run
 
 
-def install_xapk(device, file_path, del_path, root, abc) -> (list, subprocess.CompletedProcess):
+def install_xapk(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
     """安装xapk文件"""
     os.chdir(file_path)
     print("开始安装...")
@@ -516,7 +516,9 @@ def install_xapk(device, file_path, del_path, root, abc) -> (list, subprocess.Co
             else:
                 install.append(i["file"])
         print(config)
-        config, install = config_locale(config_drawable(config_abi(config, install, device.abilist)))
+        config, install = config_abi(config, install, device.abilist)
+        config, install = config_drawable(config, install)
+        config, install = config_locale(config, install)
         return install, run_msg(install)[0]
     else:
         install = install_apk(device, manifest["package_name"]+".apk", del_path, root)[0]
@@ -529,7 +531,7 @@ def install_xapk(device, file_path, del_path, root, abc) -> (list, subprocess.Co
                 sys.exit(1)
 
 
-# installSelector["xxx"](device, file_path, del_path, root, abc) -> (list, subprocess.CompletedProcess)
+# device, file_path, del_path, root[, abc] -> (list, subprocess.CompletedProcess)
 installSuffix = [".aab", ".apk", ".apkm", ".apks", ".xapk"]
 installSelector = {}
 installSelector[".aab"] = install_aab
