@@ -269,7 +269,7 @@ def get_unpack_path(file_path) -> str:
     return unpack_path
 
 
-def install_aab(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
+def install_aab(device, file_path, del_path, root):
     """正式版是需要签名的，配置好才能安装"""
     print(install_aab.__doc__)
     _, name_suffix = os.path.split(file_path)
@@ -300,7 +300,7 @@ def install_aab(device, file_path, del_path, root) -> (list, subprocess.Complete
     return install_apks(del_path[-1])
 
 
-def install_apk(device, file_path, del_path, root, abc="-rtd") -> (list, subprocess.CompletedProcess):
+def install_apk(device, file_path, del_path, root, abc="-rtd"):
     """安装apk文件"""
     _, name_suffix = os.path.split(file_path)
     manifest = dump(name_suffix, del_path)
@@ -346,7 +346,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd") -> (list, subproc
     return install, run
 
 
-def install_apkm(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
+def install_apkm(device, file_path, del_path, root):
     _, name_suffix = os.path.split(file_path)
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
@@ -390,7 +390,7 @@ def install_apkm(device, file_path, del_path, root) -> (list, subprocess.Complet
     return install, run_msg(install)[0]
 
 
-def install_apks(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
+def install_apks(device, file_path, del_path, root):
     os.chdir(root)
     _, name_suffix = os.path.split(file_path)
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
@@ -406,7 +406,7 @@ def install_apks(device, file_path, del_path, root) -> (list, subprocess.Complet
     return install, run
 
 
-def install_multiple_base(device, file_list, del_path, root) -> (list, subprocess.CompletedProcess):
+def install_multiple_base(device, file_list, del_path, root):
     """备用"""
     def _abandon(device, SESSION_ID):
         # pm install-abandon SESSION_ID
@@ -471,7 +471,7 @@ def install_multiple_base(device, file_list, del_path, root) -> (list, subproces
     return info, run
 
 
-def install_xapk(device, file_path, del_path, root) -> (list, subprocess.CompletedProcess):
+def install_xapk(device, file_path, del_path, root):
     """安装xapk文件"""
     os.chdir(file_path)
     print("开始安装...")
@@ -716,7 +716,7 @@ def restore(device, dir_path):
     os.chdir(root)
 
 
-def run_msg(cmd) -> (subprocess.CompletedProcess, str):
+def run_msg(cmd):
     print(cmd)
     if type(cmd) is str:
         cmd = shlex_split(cmd)
