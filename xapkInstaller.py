@@ -585,7 +585,7 @@ def main(root, one) -> bool:
                         _, run = install_multiple_base(device, del_path[-1], del_path, root)
                         if not run.returncode:
                             return True
-                    except:
+                    except Exception:
                         pass
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(y/N)").lower() == 'y':
                         package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
