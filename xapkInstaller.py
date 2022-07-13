@@ -117,6 +117,60 @@ class Device:
                 self._sdk = int(_sdk)
                 return self._sdk
 
+    # ===================================================
+    def _abandon(self, SESSION_ID):
+        '''中止安装'''
+        # pm install-abandon SESSION_ID
+        run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-abandon", SESSION_ID])
+        if msg:
+            print(msg)
+
+    def _commit(self, SESSION_ID):
+        # pm install-commit SESSION_ID
+        run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-commit", SESSION_ID])
+        if run.returncode:
+            self._abandon(SESSION_ID)
+            sys.exit(msg)
+        else:
+            print(msg)
+        return run
+
+    def _create(self, info) -> str:
+        # pm install-create
+        run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-create"])
+        if run.returncode:
+            sys.exit(msg)
+        else:
+            # Success: created install session [1234567890]
+            print(msg)
+            return msg.strip()[:-1].split("[")[1]
+
+    def _del(self, info):
+        for i in info:
+            run, msg = run_msg(["adb", "-s", self.device, "shell", "rm", i["path"]])
+            if run.returncode:
+                sys.exit(msg)
+
+    def _push(self, file_list) -> list:
+        info = []
+        for f in file_list:
+            info.append({"name": "_".join(f.rsplit(".")[:-1]), "path": "/data/local/tmp/"+f})
+            run, msg = run_msg(["adb", "-s", self.device, "push", f, info[-1]["path"]])
+            if run.returncode:
+                sys.exit(msg)
+        return info
+
+    def _write(self, SESSION_ID, info):
+        index = 0
+        for i in info:
+            # pm install-write SESSION_ID SPLIT_NAME PATH
+            run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-write",
+                                SESSION_ID, i["name"], i["path"]])
+            if run.returncode:
+                self._abandon(SESSION_ID)
+                sys.exit(msg)
+            index += 1
+
 
 def build_base_config(device, file_list, install):
     abi = [f"split_config.{i}.apk" for i in _abi]
@@ -416,66 +470,13 @@ def install_apks(device, file_path, del_path, root):
 
 def install_multiple_base(device, file_list, del_path, root):
     """备用"""
-    def _abandon(device, SESSION_ID):
-        # pm install-abandon SESSION_ID
-        # 中止安装
-        run, msg = run_msg(["adb", "-s", device, "shell", "pm", "install-abandon", SESSION_ID])
-        if msg:
-            print(msg)
-
-    def _commit(device, SESSION_ID):
-        # pm install-commit SESSION_ID
-        run, msg = run_msg(["adb", "-s", device, "shell", "pm", "install-commit", SESSION_ID])
-        if run.returncode:
-            _abandon(SESSION_ID)
-            sys.exit(msg)
-        else:
-            print(msg)
-        return run
-
-    def _create(device, info) -> str:
-        # pm install-create
-        run, msg = run_msg(["adb", "-s", device, "shell", "pm", "install-create"])
-        if run.returncode:
-            sys.exit(msg)
-        else:
-            # Success: created install session [1234567890]
-            print(msg)
-            return msg.strip()[:-1].split("[")[1]
-
-    def _del(device, info):
-        for i in info:
-            run, msg = run_msg(["adb", "-s", device, "shell", "rm", i["path"]])
-            if run.returncode:
-                sys.exit(msg)
-
-    def _push(device, file_list) -> list:
-        info = []
-        for f in file_list:
-            info.append({"name": "_".join(f.rsplit(".")[:-1]), "path": "/data/local/tmp/"+f})
-            run, msg = run_msg(["adb", "-s", device, "push", f, info[-1]["path"]])
-            if run.returncode:
-                sys.exit(msg)
-        return info
-
-    def _write(device, SESSION_ID, info):
-        index = 0
-        for i in info:
-            # pm install-write SESSION_ID SPLIT_NAME PATH
-            run, msg = run_msg(["adb", "-s", device, "shell", "pm", "install-write",
-                                SESSION_ID, i["name"], i["path"]])
-            if run.returncode:
-                _abandon(SESSION_ID)
-                sys.exit(msg)
-            index += 1
-
-    if type(device) is not str:
-        device = device.device
-    info = _push(device, file_list)
-    SESSION_ID = _create(device, info)
-    _write(device, SESSION_ID, info)
-    run = _commit(device, SESSION_ID)
-    _del(device, info)
+    if type(device) is not Device:
+        device = Device(device)
+    info = device._push(file_list)
+    SESSION_ID = device._create(info)
+    device._write(SESSION_ID, info)
+    run = device._commit(SESSION_ID)
+    device._del(device, info)
     return info, run
 
 
