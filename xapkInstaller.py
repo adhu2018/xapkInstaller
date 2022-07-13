@@ -471,7 +471,9 @@ def install_apkm(device, file_path, del_path, root):
     checkVersionCode(device, info["pname"], info["versioncode"])
     install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
     config, install = build_apkm_config(device, file_list, install)
-    config, install = config_locale(config_drawable(config_abi(config, install, device.abilist)))
+    config, install = config_abi(config, install, device.abilist)
+    config, install = config_drawable(config, install)
+    config, install = config_locale(config, install)
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
     os.chdir(del_path[-1])
