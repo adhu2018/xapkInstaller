@@ -172,7 +172,7 @@ class Device:
             index += 1
 
 
-def build_base_config(device, file_list, install):
+def build_apkm_config(device, file_list, install):
     abi = [f"split_config.{i}.apk" for i in _abi]
     language = [f"split_config.{i}.apk" for i in _language]
     config = {}
