@@ -16,7 +16,6 @@ from zipfile import ZipFile
 
 
 _abi = ["armeabi_v7a", "arm64_v8a", "armeabi", "x86_64", "x86", "mips64", "mips"]
-_drawableList = ["xxxhdpi", "xxhdpi", "xhdpi", "hdpi", "tvdpi", "mdpi", "ldpi", "nodpi"]
 _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
              "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl",
              "tr", "vi", "zh"]
@@ -175,6 +174,7 @@ def config_drawable(config, install):
     if config.get("drawable"):
         install.append(config["drawable"])
     else:
+        _drawableList = ["xxxhdpi", "xxhdpi", "xhdpi", "hdpi", "tvdpi", "mdpi", "ldpi", "nodpi"]
         for i in _drawableList:
             if config.get(i):
                 install.append(config[i])
