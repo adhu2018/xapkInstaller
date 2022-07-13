@@ -321,6 +321,16 @@ def config_locale(config, install):
     return config, install
 
 
+def copy_files(copy):
+    print(f"正在复制 `{copy[0]}` 到 `{copy[1]}`")
+    if os.path.exists(copy[1]):
+        delPath(copy[1])
+    if os.path.isfile(copy[0]):
+        shutil.copyfile(copy[0], copy[1])
+    else:
+        shutil.copytree(copy[0], copy[1])
+
+
 def delPath(path):
     if not os.path.exists(path):
         return
@@ -562,13 +572,7 @@ def main(root, one) -> bool:
         new_path += f".{name_suffix[1]}"
     del_path = [os.path.join(root, new_path)]
     copy = [one, del_path[0]]
-    print(f"正在复制 `{one}` 到 `{del_path[0]}`")
-    if os.path.exists(copy[1]):
-        delPath(copy[1])
-    if os.path.isfile(copy[0]):
-        shutil.copyfile(copy[0], copy[1])
-    else:
-        shutil.copytree(copy[0], copy[1])
+    copy_files(copy)
 
     try:
         devices = check()
