@@ -1,3 +1,11 @@
+0.22.071310
+新增 copy_files
+修复 部分错误的函数调用
+新增 build_xapk_config
+新增 build_apkm_config，check_by_manifest
+优化 启用xapk备用安装方案
+修复 去除一些多余参数
+修复 一些Actions相关问题
 0.0.2
 测试文本2.1
 测试文本2.2
