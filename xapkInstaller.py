@@ -118,6 +118,32 @@ class Device:
                 return self._sdk
 
 
+def build_base_config(device, file_list, install):
+    abi = [f"split_config.{i}.apk" for i in _abi]
+    language = [f"split_config.{i}.apk" for i in _language]
+    config = {}
+    config["language"] = []
+    # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
+    for i in file_list:
+        if i == f"split_config.{device.abi.replace('-', '_')}.apk":
+            config["abi"] = i
+        for d in device.drawable:
+            if i == f"split_config.{d}.apk":
+                config["drawable"] = i
+        if i == f"split_config.{device.locale.split('-')[0]}.apk":
+            config["locale"] = i
+        elif i in abi:
+            config[i.split(".")[1]] = i
+        elif i.find("dpi.apk") >= 0:
+            config[i.split(".")[1]] = i
+        elif i in language:
+            config["language"].append(i)
+        elif i.endswith(".apk"):
+            install.append(i)
+    print(config)
+    return config, install
+
+
 def check() -> list:
     run = run_msg("adb devices")[0]
     _devices = tostr(run.stdout).strip().split("\n")[1:]
@@ -137,6 +163,27 @@ def check() -> list:
         if input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() != "y":
             sys.exit("用户取消安装！")
     return devices
+
+
+def check_by_manifest(device, manifest):
+    if type(device) is not Device:
+        device = Device(device)
+    if device.sdk < manifest["min_sdk_version"]:
+        sys.exit("安装失败：安卓版本过低！")
+
+    try:
+        if device.sdk > manifest["target_sdk_version"]:
+            print("警告：安卓版本过高！可能存在兼容性问题！")
+    except KeyError:
+        print("`manifest['target_sdk_version']` no found.")
+
+    abilist = device.abilist
+
+    try:
+        if manifest.get("native_code") and not findabi(manifest["native_code"], abilist):
+            sys.exit(f"安装失败：{manifest['native_code']}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
+    except UnboundLocalError:
+        pass
 
 
 def checkVersionCode(device: str, package_name: str, fileVersionCode: int, versionCode: int = -1) -> None:
@@ -306,24 +353,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     manifest = dump(name_suffix, del_path)
     print(manifest)
     checkVersionCode(device, manifest["package_name"], manifest["versionCode"])
-    if type(device) is not Device:
-        device = Device(device)
-    if device.sdk < manifest["min_sdk_version"]:
-        sys.exit("安装失败：安卓版本过低！")
-
-    try:
-        if device.sdk > manifest["target_sdk_version"]:
-            print("警告：安卓版本过高！可能存在兼容性问题！")
-    except KeyError:
-        print("`manifest['target_sdk_version']` no found.")
-
-    abilist = device.abilist
-
-    try:
-        if manifest.get("native_code") and not findabi(manifest["native_code"], abilist):
-            sys.exit(f"安装失败：{manifest['native_code']}\n应用程序二进制接口(abi)不匹配！该手机支持的abi列表为：{abilist}")
-    except UnboundLocalError:
-        pass
+    device = check_by_manifest(device, manifest)
 
     install = ["adb", "-s", device.device, "install", abc, name_suffix]
     run, msg = run_msg(install)
@@ -360,29 +390,7 @@ def install_apkm(device, file_path, del_path, root):
         sys.exit("安装失败：安卓版本过低！")
     checkVersionCode(device, info["pname"], info["versioncode"])
     install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
-    abi = [f"split_config.{i}.apk" for i in _abi]
-    language = [f"split_config.{i}.apk" for i in _language]
-
-    config = {}
-    config["language"] = []
-    # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
-    for i in file_list:
-        if i == f"split_config.{device.abi.replace('-', '_')}.apk":
-            config["abi"] = i
-        for d in device.drawable:
-            if i == f"split_config.{d}.apk":
-                config["drawable"] = i
-        if i == f"split_config.{device.locale.split('-')[0]}.apk":
-            config["locale"] = i
-        elif i in abi:
-            config[i.split(".")[1]] = i
-        elif i.find("dpi.apk") >= 0:
-            config[i.split(".")[1]] = i
-        elif i in language:
-            config["language"].append(i)
-        elif i.endswith(".apk"):
-            install.append(i)
-    print(config)
+    config, install = build_base_config(device, file_list, install)
     config, install = config_locale(config_drawable(config_abi(config, install, device.abilist)))
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
