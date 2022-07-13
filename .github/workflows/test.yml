@@ -21,6 +21,7 @@ jobs:
         python-version: "3.7"
     - name: Install dependencies
       run: |
+        tzutil /s "China Standard Time"
         python -m pip install --upgrade pip
         pip install flake8
         pip install -r requirements.txt
