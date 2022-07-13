@@ -444,7 +444,7 @@ def install_apkm(device, file_path, del_path, root):
         sys.exit("安装失败：安卓版本过低！")
     checkVersionCode(device, info["pname"], info["versioncode"])
     install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
-    config, install = build_base_config(device, file_list, install)
+    config, install = build_apkm_config(device, file_list, install)
     config, install = config_locale(config_drawable(config_abi(config, install, device.abilist)))
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
