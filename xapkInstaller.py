@@ -198,6 +198,32 @@ def build_apkm_config(device, file_list, install):
     return config, install
 
 
+def build_xapk_config(device, split_apks, install):
+    abi = [f"config.{i}" for i in _abi]
+    language = [f"config.{i}" for i in _language]
+    config = {}
+    config["language"] = []
+    # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
+    for i in split_apks:
+        if i["id"] == f"config.{device.abi.replace('-', '_')}":
+            config["abi"] = i["file"]
+        for d in device.drawable:
+            if i == f"split_config.{d}.apk":
+                config["drawable"] = i
+        if i["id"] == f"config.{device.locale.split('-')[0]}":
+            config["locale"] = i["file"]
+        elif i["id"] in abi:
+            config[i["id"].split(".")[1]] = i["file"]
+        elif i["id"].endswith("dpi"):
+            config[i["id"].split(".")[1]] = i["file"]
+        elif i["id"] in language:
+            config["language"].append(i["file"])
+        else:
+            install.append(i["file"])
+    print(config)
+    return config, install
+
+
 def check() -> list:
     run = run_msg("adb devices")[0]
     _devices = tostr(run.stdout).strip().split("\n")[1:]
@@ -499,32 +525,7 @@ def install_xapk(device, file_path, del_path, root):
             print("警告：安卓版本过高！可能存在兼容性问题！")
 
         install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
-        abi = [f"config.{i}" for i in _abi]
-        language = [f"config.{i}" for i in _language]
-        other = ["extra_icu", "feedv2", "vr", "chime"]  # Google Chrome
-
-        config = {}
-        config["language"] = []
-        # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
-        for i in split_apks:
-            if i["id"] == f"config.{device.abi.replace('-', '_')}":
-                config["abi"] = i["file"]
-            for d in device.drawable:
-                if i == f"split_config.{d}.apk":
-                    config["drawable"] = i
-            if i["id"] == f"config.{device.locale.split('-')[0]}":
-                config["locale"] = i["file"]
-            elif i["id"] in abi:
-                config[i["id"].split(".")[1]] = i["file"]
-            elif i["id"].endswith("dpi"):
-                config[i["id"].split(".")[1]] = i["file"]
-            elif i["id"] in language:
-                config["language"].append(i["file"])
-            elif i["id"] in other:
-                pass
-            else:
-                install.append(i["file"])
-        print(config)
+        config, install = build_xapk_config(device, split_apks, install)
         config, install = config_abi(config, install, device.abilist)
         config, install = config_drawable(config, install)
         config, install = config_locale(config, install)
