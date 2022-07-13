@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-from hashlib import md5 as _md5
-from json import load as json_load
 import os
-from shlex import split as shlex_split
 import shutil
 import subprocess
 import sys
-from traceback import print_exc
-from zipfile import ZipFile
-from re import findall as re_findall
-from chardet import detect
-from yaml import safe_load
 from axmlparserpy.axmlprinter import AXMLPrinter
+from chardet import detect
 from defusedxml.minidom import parseString
+from hashlib import md5 as _md5
+from json import load as json_load
+from re import findall as re_findall
+from shlex import split as shlex_split
+from traceback import print_exc
+from yaml import safe_load
+from zipfile import ZipFile
 
 
 _abi = ["armeabi_v7a", "arm64_v8a", "armeabi", "x86_64", "x86", "mips64", "mips"]
