@@ -135,7 +135,7 @@ class Device:
             print(msg)
         return run
 
-    def _create(self, info) -> str:
+    def _create(self) -> str:
         # pm install-create
         run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-create"])
         if run.returncode:
@@ -506,15 +506,15 @@ def install_apks(device, file_path, del_path, root):
     return install, run
 
 
-def install_multiple_base(device, file_list, del_path, root):
+def install_base(device, file_list):
     """备用"""
     if type(device) is not Device:
         device = Device(device)
+    SESSION_ID = device._create()
     info = device._push(file_list)
-    SESSION_ID = device._create(info)
     device._write(SESSION_ID, info)
     run = device._commit(SESSION_ID)
-    device._del(device, info)
+    device._del(info)
     return info, run
 
 
@@ -598,11 +598,11 @@ def main(root, one) -> bool:
                     printerr(tostr(run.stderr))
                     try:
                         print("使用备用方案")
-                        _, run = install_multiple_base(device, del_path[-1], del_path, root)
+                        _, run = install_base(device, install[5:])
                         if not run.returncode:
                             return True
-                    except Exception:
-                        pass
+                    except Exception as err:
+                        print(err)
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(y/N)").lower() == 'y':
                         package_name = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                         if uninstall(device, package_name, root):
