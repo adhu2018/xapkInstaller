@@ -425,13 +425,6 @@ def install_aab(device, file_path, del_path, root):
              "--connected-device", "--bundle="+name_suffix,
              "--output="+del_path[-1]]
     sign = read_config("./config.yaml")
-    """
-    sign = {}
-    sign["ks"] = ""  # `/path/to/keystore.jks`
-    sign["ks-pass"] = ""  # `pass:password` or `file:/path/to/keystore.pwd`
-    sign["ks-key-alias"] = ""  # `alias`
-    sign["key-pass"] = ""  # `pass:password` or `file:/path/to/key.pwd`
-    """
     if sign["ks"] and sign["ks-pass"] and sign["ks-key-alias"] and sign["key-pass"]:
         for i in sign:
             build.append(f"--{i}={sign[i]}")
