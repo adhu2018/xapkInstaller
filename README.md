@@ -39,4 +39,4 @@
 
 不支持各种增量更新包。  
 
-如果你有见过其他格式的安装包或者在使用过程中出现了问题，请[提交issues](https://github.com/adhu2018/xapkInstaller/issues/new)。  
+如果你有见过其他格式的安装包或者在使用过程中出现了问题，请[提交issues](https://github.com/adhu2018/xapkInstaller/issues/new)。使用了 logging 记录运行日志，反馈时可选择附上对应日志，**安装文件路径可能会包含敏感信息**，如果有，请先进行处理！  

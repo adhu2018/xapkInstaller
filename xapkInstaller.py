@@ -792,10 +792,13 @@ if __name__ == "__main__":
     try:
         for i, one in enumerate(sys.argv[1:]):
             log.info(f"正在安装第{i+1}/{_len_}个...")
+            log.info(str(one)+' start')
             if main(root, one):
                 success += 1
+                log.info(str(one)+' end')
     except Exception as unknowerr:
         log.exception(unknowerr)
+        log.info('error end')
     finally:
         log.info(f"共{_len_}个，成功安装了{success}个。")
         pause()
