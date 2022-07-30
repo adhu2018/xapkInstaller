@@ -84,7 +84,7 @@ class Device:
         return self._dpi
 
     def getdpi(self) -> int:
-        _, _dpi = run_msg(f"adb -s {self.device} shell dumpsys window displays")
+        _dpi = run_msg(f"adb -s {self.device} shell dumpsys window displays")[1]
         for i in _dpi.strip().split("\n"):
             if i.find("dpi") >= 0:
                 for j in i.strip().split(" "):
@@ -431,7 +431,7 @@ def get_unpack_path(file_path) -> str:
 def install_aab(device, file_path, del_path, root):
     """正式版是需要签名的，配置好才能安装"""
     log.info(install_aab.__doc__)
-    _, name_suffix = os.path.split(file_path)
+    name_suffix = os.path.split(file_path)[1]
     name = name_suffix.rsplit(".", 1)[0]
     del_path.append(name+".apks")
     if os.path.exists(del_path[-1]):
@@ -451,7 +451,7 @@ def install_aab(device, file_path, del_path, root):
 
 def install_apk(device, file_path, del_path, root, abc="-rtd"):
     """安装apk文件"""
-    _, name_suffix = os.path.split(file_path)
+    name_suffix = os.path.split(file_path)[1]
     manifest = dump(name_suffix, del_path)
     log.info(manifest)
     checkVersionCode(device, manifest["package_name"], manifest["versionCode"])
@@ -479,7 +479,7 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
 
 
 def install_apkm(device, file_path, del_path, root):
-    _, name_suffix = os.path.split(file_path)
+    name_suffix = os.path.split(file_path)[1]
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
     upfile = "info.json"
@@ -504,7 +504,7 @@ def install_apkm(device, file_path, del_path, root):
 
 def install_apks(device, file_path, del_path, root):
     os.chdir(root)
-    _, name_suffix = os.path.split(file_path)
+    name_suffix = os.path.split(file_path)[1]
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
     run, msg = run_msg(install)
     if run.returncode:
@@ -574,7 +574,7 @@ installSelector[".xapk"] = install_xapk
 
 def main(root, one) -> bool:
     os.chdir(root)
-    _, name_suffix = os.path.split(one)
+    name_suffix = os.path.split(one)[1]
     name_suffix = name_suffix.rsplit(".", 1)
     new_path = md5(name_suffix[0])
     if len(name_suffix) > 1:
@@ -607,7 +607,7 @@ def main(root, one) -> bool:
                     printerr(tostr(run.stderr))
                     try:
                         log.info("使用备用方案")
-                        _, run = install_base(device, install[5:])
+                        run = install_base(device, install[5:])[1]
                         if not run.returncode:
                             return True
                     except Exception as err:
