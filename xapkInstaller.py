@@ -48,6 +48,8 @@ def tostr(bytes_):
 
 
 class Device:
+    __slots__ = ['_abi', '_abilist', '_dpi', '_drawable', '_locale', '_sdk', 'device']
+
     def __init__(self, device):
         self._abi = None
         self._abilist = None
@@ -479,7 +481,6 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
 
 
 def install_apkm(device, file_path, del_path, root):
-    name_suffix = os.path.split(file_path)[1]
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
     upfile = "info.json"
