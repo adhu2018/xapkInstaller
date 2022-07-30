@@ -21,6 +21,13 @@ _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
              "tr", "vi", "zh"]
 
 
+warn_msg = {}
+warn_msg['bundletool'] = "bundletool 可在 "\
+                         "https://github.com/google/bundletool/releases"\
+                         " 下载，下载后重命名为 bundletool.jar "\
+                         "并将其放置在 xapkInstaller 同一文件夹即可。"
+
+
 def tostr(bytes_):
     return bytes_.decode(detect(bytes_)["encoding"])
 
@@ -430,10 +437,7 @@ def install_aab(device, file_path, del_path, root):
             build.append(f"--{i}={sign[i]}")
     run = run_msg(build)[0]
     if run.returncode:
-        sys.exit("bundletool 可在 "
-                 "https://github.com/google/bundletool/releases"
-                 " 下载，下载后重命名为bundletool.jar"
-                 "并将其放置在xapkInstaller同一文件夹即可。")
+        sys.exit(warn_msg['bundletool'])
     return install_apks(del_path[-1])
 
 
@@ -499,10 +503,7 @@ def install_apks(device, file_path, del_path, root):
         if '[SCREEN_DENSITY]' in msg:
             sys.exit("Missing APKs for [SCREEN_DENSITY] dimensions in the module 'base' for the provided device.")
         else:
-            sys.exit("bundletool 可在 "
-                     "https://github.com/google/bundletool/releases"
-                     " 下载，下载后重命名为bundletool.jar"
-                     "并将其放置在xapkInstaller同一文件夹即可。")
+            sys.exit(warn_msg['bundletool'])
     return install, run
 
 
