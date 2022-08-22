@@ -505,6 +505,19 @@ def install_apkm(device, file_path, del_path, root):
 
 def install_apks(device, file_path, del_path, root):
     os.chdir(root)
+
+    zip_file = ZipFile(file_path)
+    file_list = zip_file.namelist()
+    if 'toc.pb' not in file_list:
+        if 'meta.sai_v2.json' in file_list:  # SAI v2
+            install_apks_sai(device, file_path, del_path, version=2)
+        elif 'meta.sai_v1.json' in file_list:  # SAI v1
+            install_apks_sai(device, file_path, del_path, version=1)
+        else:  # unknow
+            return
+    
+    # 正规 apks 文件
+
     name_suffix = os.path.split(file_path)[1]
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
     run, msg = run_msg(install)
@@ -514,6 +527,16 @@ def install_apks(device, file_path, del_path, root):
         else:
             sys.exit(warn_msg['bundletool'])
     return install, run
+
+
+def install_apks_sai(device, file_path, del_path, version):
+    '''用于安装SAI生成的apks文件'''
+    if version == 2:
+        pass
+    elif version == 1:
+        pass
+    else:
+        return
 
 
 def install_base(device, file_list):
