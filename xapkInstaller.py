@@ -531,6 +531,16 @@ def install_apks(device, file_path, del_path, root):
 
 def install_apks_sai(device, file_path, del_path, version):
     '''用于安装SAI生成的apks文件'''
+    if type(device) is Device:
+        device = device.device
+    del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
+    zip_file = ZipFile(file_path)
+    file_list = zip_file.namelist()
+    for i in ['meta.sai_v2.json', 'meta.sai_v1.json', 'icon.png']:
+        try:
+            file_list.remove(i)
+        except ValueError:
+            pass
     if version == 2:
         pass
     elif version == 1:
