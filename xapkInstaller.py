@@ -542,6 +542,10 @@ def install_apks_sai(device, file_path, del_path, version):
         except ValueError:
             pass
     if version == 2:
+        upfile = "meta.sai_v2.json"
+        zip_file.extract(upfile, del_path[-1])
+        data = read_json(os.path.join(del_path[-1], upfile))
+        checkVersionCode(device, data['package'], data['version_code'])
         pass
     elif version == 1:
         pass
