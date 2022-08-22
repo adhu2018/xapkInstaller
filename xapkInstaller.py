@@ -457,7 +457,9 @@ def install_apk(device, file_path, del_path, root, abc="-rtd"):
     manifest = dump(name_suffix, del_path)
     log.info(manifest)
     checkVersionCode(device, manifest["package_name"], manifest["versionCode"])
-    device = check_by_manifest(device, manifest)
+    check_by_manifest(device, manifest)
+    if type(device) is not Device:
+        device = Device(device)
 
     install = ["adb", "-s", device.device, "install", abc, name_suffix]
     run, msg = run_msg(install)
