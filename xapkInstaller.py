@@ -43,7 +43,7 @@ warn_msg['bundletool'] = "bundletool 可在 "\
                          "并将其放置在 xapkInstaller 同一文件夹即可。"
 
 
-def tostr(bytes_):
+def tostr(bytes_) -> str:
     return bytes_.decode(detect(bytes_)["encoding"])
 
 
@@ -196,7 +196,7 @@ class Device:
             index += 1
 
 
-def build_apkm_config(device, file_list, install):
+def build_apkm_config(device, file_list, install: list):
     abi = [f"split_config.{i}.apk" for i in _abi]
     language = [f"split_config.{i}.apk" for i in _language]
     config = {}
@@ -222,7 +222,7 @@ def build_apkm_config(device, file_list, install):
     return config, install
 
 
-def build_xapk_config(device, split_apks, install):
+def build_xapk_config(device, split_apks, install: list):
     abi = [f"config.{i}" for i in _abi]
     language = [f"config.{i}" for i in _language]
     config = {}
@@ -269,7 +269,7 @@ def check() -> list:
     return devices
 
 
-def check_by_manifest(device, manifest):
+def check_by_manifest(device: Device, manifest) -> None:
     if type(device) is not Device:
         device = Device(device)
     if device.sdk < manifest["min_sdk_version"]:
@@ -309,7 +309,7 @@ def checkVersionCode(device: str, package_name: str, fileVersionCode: int, versi
             sys.exit("版本一致，用户取消安装。")
 
 
-def config_abi(config, install, abilist):
+def config_abi(config: dict, install: list, abilist):
     if config.get("abi"):
         install.append(config["abi"])
     else:
@@ -321,7 +321,7 @@ def config_abi(config, install, abilist):
     return config, install
 
 
-def config_drawable(config, install):
+def config_drawable(config: dict, install: list):
     if config.get("drawable"):
         install.append(config["drawable"])
     else:
@@ -333,7 +333,7 @@ def config_drawable(config, install):
     return config, install
 
 
-def config_locale(config, install):
+def config_locale(config: dict, install: list):
     if config.get("locale"):
         install.append(config["locale"])
     elif config.get("language"):
@@ -345,7 +345,7 @@ def config_locale(config, install):
     return config, install
 
 
-def copy_files(copy):
+def copy_files(copy: list):
     log.info(f"正在复制 `{copy[0]}` 到 `{copy[1]}`")
     if os.path.exists(copy[1]):
         delPath(copy[1])
@@ -781,7 +781,7 @@ def run_msg(cmd):
         return run, tostr(run.stderr)
     if run.stdout:
         return run, tostr(run.stdout)
-    return run, ""
+    return run, str()
 
 
 def uninstall(device, package_name, root):
