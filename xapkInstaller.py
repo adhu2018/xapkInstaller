@@ -502,7 +502,6 @@ def install_apkm(device: str, file_path: str, del_path: List[str], root: str) ->
 
 def install_apks(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
     os.chdir(root)
-
     zip_file = ZipFile(file_path)
     file_list = zip_file.namelist()
     if 'toc.pb' not in file_list:
@@ -512,9 +511,17 @@ def install_apks(device: str, file_path: str, del_path: List[str], root: str) ->
             return install_apks_sai(device, file_path, del_path, version=1)
         else:  # unknow
             return
+    try:
+        install, status = install_apks_java(file_path)
+        if status:
+            return install, status
+    except FileNotFoundError:
+        pass
+    log.warning('没有配置java环境或存在错误，将尝试直接解析文件')
+    return install_apks_py(device, file_path, del_path)
 
-    # 正规 apks 文件
 
+def install_apks_java(file_path: str) -> Tuple[List[str], bool]:
     name_suffix: str = os.path.split(file_path)[1]
     install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
     run, msg = run_msg(install)
@@ -524,6 +531,18 @@ def install_apks(device: str, file_path: str, del_path: List[str], root: str) ->
         else:
             sys.exit(warn_msg['bundletool'])
     return install, True
+
+
+def install_apks_py(device: str, file_path: str, del_path: List[str]) -> Tuple[List[str], bool]:
+    zip_file = ZipFile(file_path)
+    file_list = zip_file.namelist()
+    install = ["adb", "-s", device, "install-multiple", ""]
+    if 'toc.pb' in file_list:
+        del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
+        for i in file_list:
+            if i.startswith('splits/'):
+                install.append(zip_file.extract(i, del_path[-1]))
+    return install_multiple(install)
 
 
 def install_apks_sai(device: str, file_path: str, del_path: List[str], version: int) -> Tuple[List[str], bool]:

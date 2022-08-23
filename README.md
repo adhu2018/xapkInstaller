@@ -13,7 +13,7 @@
 - `*.apk` 需要 `adb`, `aapt(非必要)`  
 - `*.aab => *.apks` 需要 `java`, [`bundletool.jar`](https://github.com/google/bundletool/releases)  
 - `*.apkm` 需要 `adb`  
-- `*.apks` 需要 `java`, `bundletool.jar`  
+- `*.apks` 需要 `java(非必要)`, `bundletool.jar(非必要)`  
 
 编译：
 
