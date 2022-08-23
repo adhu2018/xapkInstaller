@@ -11,7 +11,7 @@ from hashlib import md5 as _md5
 from json import load as json_load
 from re import findall as re_findall
 from shlex import split as shlex_split
-from typing import List, Tuple
+from typing import List, NoReturn, Tuple
 from yaml import safe_load
 from zipfile import ZipFile
 
@@ -249,7 +249,7 @@ def build_xapk_config(device, split_apks, install: list):
     return config, install
 
 
-def check() -> list:
+def check() -> List[str]:
     run, msg = run_msg("adb devices")
     _devices = tostr(run.stdout).strip().split("\n")[1:]
     devices = []
@@ -729,13 +729,13 @@ def md5(_str, encoding='utf-8') -> str:
     return m.hexdigest()
 
 
-def pause():
+def pause() -> NoReturn:
     input("按回车键继续...")
     log.debug('正常退出')
     sys.exit(0)
 
 
-def printerr(err: str) -> None:
+def printerr(err: str):
     if "INSTALL_FAILED_VERSION_DOWNGRADE" in err:
         log.warning("警告：降级安装？请确保文件无误！")
     elif "INSTALL_FAILED_USER_RESTRICTED: Install canceled by user" in err:
