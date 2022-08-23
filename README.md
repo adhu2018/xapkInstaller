@@ -17,7 +17,7 @@
 
 编译：
 
-- 本地编译：Windows下直接运行`build.bat`，需要python环境。  
+- 本地编译：Windows下直接运行`build.bat`，需要 python 3.7 环境。  
 - 在线编译： [Actions](https://github.com/adhu2018/xapkInstaller/actions) 。
 
 或下载[已编译版本](https://github.com/adhu2018/xapkInstaller/releases/latest)。  

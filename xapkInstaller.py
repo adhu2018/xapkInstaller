@@ -197,7 +197,7 @@ class Device:
             index += 1
 
 
-def build_apkm_config(device: Device, file_list: list, install: list) -> Tuple[dict, List[str]]:
+def build_apkm_config(device: Device, file_list: List[str], install: List[str]) -> Tuple[dict, List[str]]:
     abi = [f"split_config.{i}.apk" for i in _abi]
     language = [f"split_config.{i}.apk" for i in _language]
     config = {}
@@ -223,7 +223,7 @@ def build_apkm_config(device: Device, file_list: list, install: list) -> Tuple[d
     return config, install
 
 
-def build_xapk_config(device: Device, split_apks: list, install: list):
+def build_xapk_config(device: Device, split_apks: List[str], install: List[str]):
     abi = [f"config.{i}" for i in _abi]
     language = [f"config.{i}" for i in _language]
     config = {}
@@ -306,7 +306,7 @@ def checkVersionCode(device: str, package_name: str, fileVersionCode: int, versi
             sys.exit("版本一致，用户取消安装。")
 
 
-def config_abi(config: dict, install: list, abilist: list):
+def config_abi(config: dict, install: List[str], abilist: List[str]):
     if config.get("abi"):
         install.append(config["abi"])
     else:
@@ -318,7 +318,7 @@ def config_abi(config: dict, install: list, abilist: list):
     return config, install
 
 
-def config_drawable(config: dict, install: list):
+def config_drawable(config: dict, install: List[str]):
     if config.get("drawable"):
         install.append(config["drawable"])
     else:
@@ -330,7 +330,7 @@ def config_drawable(config: dict, install: list):
     return config, install
 
 
-def config_locale(config: dict, install: list):
+def config_locale(config: dict, install: List[str]):
     if config.get("locale"):
         install.append(config["locale"])
     elif config.get("language"):
@@ -342,7 +342,7 @@ def config_locale(config: dict, install: list):
     return config, install
 
 
-def copy_files(copy: list):
+def copy_files(copy: List[str]):
     log.info(f"正在复制 `{copy[0]}` 到 `{copy[1]}`")
     if os.path.exists(copy[1]):
         delPath(copy[1])
@@ -352,7 +352,7 @@ def copy_files(copy: list):
         shutil.copytree(copy[0], copy[1])
 
 
-def delPath(path):
+def delPath(path: str):
     if not os.path.exists(path):
         return
     log.info(f"删除    {path}")
@@ -361,7 +361,7 @@ def delPath(path):
     return shutil.rmtree(path)
 
 
-def dump(file_path: str, del_path: list) -> dict:
+def dump(file_path: str, del_path: List[str]) -> dict:
     run, msg = run_msg(["aapt", "dump", "badging", file_path])
     if msg:
         log.info(msg)
@@ -384,7 +384,7 @@ def dump(file_path: str, del_path: list) -> dict:
     return manifest
 
 
-def dump_py(file_path, del_path: list) -> dict:
+def dump_py(file_path: str, del_path: List[str]) -> dict:
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
     upfile = "AndroidManifest.xml"
@@ -412,22 +412,22 @@ def dump_py(file_path, del_path: list) -> dict:
     return manifest
 
 
-def findabi(native_code: list, abilist: list) -> bool:
+def findabi(native_code: List[str], abilist: List[str]) -> bool:
     for i in abilist:
         if i in native_code:
             return True
     return False
 
 
-def get_unpack_path(file_path) -> str:
+def get_unpack_path(file_path: str) -> str:
     """获取文件解压路径"""
     dir_path, name_suffix = os.path.split(file_path)
-    name, suffix = os.path.splitext(name_suffix)
+    name = os.path.splitext(name_suffix)[0]  # "suffix" is not accessed
     unpack_path = os.path.join(dir_path, name)
     return unpack_path
 
 
-def install_aab(device: str, file_path, del_path, root) -> Tuple[List[str], bool]:
+def install_aab(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
     """正式版是需要签名的，配置好才能安装"""
     log.info(install_aab.__doc__)
     name_suffix = os.path.split(file_path)[1]
@@ -448,7 +448,7 @@ def install_aab(device: str, file_path, del_path, root) -> Tuple[List[str], bool
     return install_apks(device, del_path[-1], del_path, root)
 
 
-def install_apk(device: str, file_path, del_path: list, root, abc: str="-rtd") -> Tuple[List[str], bool]:
+def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc: str="-rtd") -> Tuple[List[str], bool]:
     """安装apk文件"""
     device: Device = Device(device)
     name_suffix: str = os.path.split(file_path)[1]
@@ -478,7 +478,7 @@ def install_apk(device: str, file_path, del_path: list, root, abc: str="-rtd") -
     return install, True
 
 
-def install_apkm(device: str, file_path, del_path, root) -> Tuple[List[str], bool]:
+def install_apkm(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
     device = Device(device)
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
@@ -500,7 +500,7 @@ def install_apkm(device: str, file_path, del_path, root) -> Tuple[List[str], boo
     return install_multiple(install)
 
 
-def install_apks(device: str, file_path, del_path, root) -> Tuple[List[str], bool]:
+def install_apks(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
     os.chdir(root)
 
     zip_file = ZipFile(file_path)
@@ -526,7 +526,7 @@ def install_apks(device: str, file_path, del_path, root) -> Tuple[List[str], boo
     return install, True
 
 
-def install_apks_sai(device: str, file_path, del_path, version) -> Tuple[List[str], bool]:
+def install_apks_sai(device: str, file_path: str, del_path: List[str], version: int) -> Tuple[List[str], bool]:
     '''用于安装SAI生成的apks文件'''
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
@@ -563,7 +563,7 @@ def install_apks_sai(device: str, file_path, del_path, version) -> Tuple[List[st
         return install, False
 
 
-def install_base(device: Device, file_list: list) -> Tuple[List[dict], bool]:
+def install_base(device: Device, file_list: List[str]) -> Tuple[List[dict], bool]:
     """备用"""
     SESSION_ID = device._create()
     info = device._push(file_list)
@@ -599,7 +599,7 @@ def install_multiple(install: List[str]) -> Tuple[List[str], bool]:
     return install, False
 
 
-def install_xapk(device: str, file_path: str, del_path: list, root) -> Tuple[List[Union[str, List[str]]], bool]:
+def install_xapk(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[Union[str, List[str]]], bool]:
     """安装xapk文件"""
     device: Device = Device(device)
     os.chdir(file_path)
@@ -636,7 +636,7 @@ def install_xapk(device: str, file_path: str, del_path: list, root) -> Tuple[Lis
                 sys.exit(1)
 
 
-# device: str, file_path, del_path, root[, abc] -> Tuple[List[Union[str, List[str]]], bool]
+# device: str, file_path: str, del_path: List[str], root: str[, abc: str] -> Tuple[List[Union[str, List[str]]], bool]
 installSuffix = [".aab", ".apk", ".apkm", ".apks", ".xapk"]
 installSelector = {}
 installSelector[".aab"] = install_aab
@@ -646,7 +646,7 @@ installSelector[".apks"] = install_apks
 installSelector[".xapk"] = install_xapk
 
 
-def main(root, one: str) -> bool:
+def main(root: str, one: str) -> bool:
     os.chdir(root)
     name_suffix = os.path.split(one)[1]
     name_suffix = name_suffix.rsplit(".", 1)
@@ -735,7 +735,7 @@ def printerr(err: str):
         log.error(err)
 
 
-def pull_apk(device: str, package: str, root) -> str:
+def pull_apk(device: str, package: str, root: str) -> str:
     log.info("正在备份安装包...")
     run, msg = run_msg(["adb", "-s", device, "shell", "pm", "path", package])
     if run.returncode:
@@ -771,7 +771,7 @@ def read_json(file) -> dict:
         return json_load(f)
 
 
-def restore(device: str, dir_path, root):
+def restore(device: str, dir_path: str, root: str):
     log.info("开始恢复...")
     os.chdir(dir_path)
     all = os.listdir(dir_path)
@@ -800,7 +800,7 @@ def restore(device: str, dir_path, root):
     os.chdir(root)
 
 
-def run_msg(cmd):
+def run_msg(cmd: Union[str, List[str]]):
     log.debug(cmd)
     if type(cmd) is str:
         cmd = shlex_split(cmd)
@@ -812,7 +812,7 @@ def run_msg(cmd):
     return run, str()
 
 
-def uninstall(device: str, package_name: str, root):
+def uninstall(device: str, package_name: str, root: str):
     dir_path = pull_apk(device, package_name, root)
     if not dir_path:  # 备份文件时出现错误
         return False
@@ -820,7 +820,7 @@ def uninstall(device: str, package_name: str, root):
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     cmd = ["adb", "-s", device, "shell", "pm", "uninstall", "-k", package_name]
     log.info("开始卸载...")
-    run, msg = run_msg(cmd)
+    run = run_msg(cmd)[0]  # "msg" is not accessed
     try:
         if run.returncode:
             restore(device, dir_path, root)
@@ -830,7 +830,7 @@ def uninstall(device: str, package_name: str, root):
     return run
 
 
-def unpack(file_path) -> str:
+def unpack(file_path: str) -> str:
     """解压文件"""
     unpack_path = get_unpack_path(file_path)
     log.info("文件越大，解压越慢，请耐心等待...")
