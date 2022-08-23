@@ -519,7 +519,7 @@ def install_apks(device, file_path, del_path, root) -> Tuple[List, bool]:
             return install_apks_sai(device, file_path, del_path, version=1)
         else:  # unknow
             return
-    
+
     # 正规 apks 文件
 
     name_suffix = os.path.split(file_path)[1]
