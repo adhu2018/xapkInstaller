@@ -536,12 +536,26 @@ def install_apks_java(file_path: str) -> Tuple[List[str], bool]:
 def install_apks_py(device: str, file_path: str, del_path: List[str]) -> Tuple[List[str], bool]:
     zip_file = ZipFile(file_path)
     file_list = zip_file.namelist()
-    install = ["adb", "-s", device, "install-multiple", ""]
-    if 'toc.pb' in file_list:
-        del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
+    del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
+    device: Device = Device(device)
+    if device.sdk < 21:
+        log.warning('当前安卓版本不支持多apk模式安装，希望apks里有适合的standalone文件')
         for i in file_list:
-            if i.startswith('splits/'):
-                install.append(zip_file.extract(i, del_path[-1]))
+            f = None
+            if f'standalone-{device.abi}_{device.dpi}.apk' in i:
+                f = zip_file.extract(i, del_path[-1])
+            else:
+                for a in device.abilist:
+                    if f'standalone-{device.abi}_{device.dpi}.apk' in i:
+                        f = zip_file.extract(i, del_path[-1])
+            if f:
+                return install_apk(device.device, f, del_path, os.getcwd())
+            log.error('看来没有...')
+            sys.exit('没有适合的standalone文件')
+    install = ["adb", "-s", device.device, "install-multiple", ""]
+    for i in file_list:
+        if i.startswith('splits/'):
+            install.append(zip_file.extract(i, del_path[-1]))
     return install_multiple(install)
 
 
@@ -596,7 +610,7 @@ def install_base(device: Device, file_list: List[str]) -> Tuple[List[dict], bool
 
 def install_multiple(install: List[str]) -> Tuple[List[str], bool]:
     # install-multiple
-    run, msg = run_msg(install)
+    run = run_msg(install)[0]  # "msg" is not accessed
     if run.returncode:
         if install[4] == '-rtd':
             install[4] = '-r'
