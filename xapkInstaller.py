@@ -431,9 +431,8 @@ def get_unpack_path(file_path) -> str:
     return unpack_path
 
 
-def install_aab(device, file_path, del_path, root) -> Tuple[List, bool]:
+def install_aab(device: str, file_path, del_path, root) -> Tuple[List, bool]:
     """正式版是需要签名的，配置好才能安装"""
-    # 注意： device 参数用于统一输入参数类型，在这里没有意义，但不要删!!!
     log.info(install_aab.__doc__)
     name_suffix = os.path.split(file_path)[1]
     name = name_suffix.rsplit(".", 1)[0]
@@ -450,7 +449,7 @@ def install_aab(device, file_path, del_path, root) -> Tuple[List, bool]:
     run = run_msg(build)[0]
     if run.returncode:
         sys.exit(warn_msg['bundletool'])
-    return install_apks(del_path[-1])
+    return install_apks(device, del_path[-1], del_path, root)
 
 
 def install_apk(device, file_path, del_path, root, abc="-rtd") -> Tuple[List, bool]:
