@@ -564,8 +564,10 @@ def install_apks_sai(device, file_path, del_path, version) -> Tuple[List, bool]:
                 return install, False
             return install, True
     elif version == 1:
+        log.error('未完成')
         return install, False
     else:
+        log.error('未知情况')
         return install, False
 
 
