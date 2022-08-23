@@ -782,7 +782,7 @@ def read_json(file) -> dict:
         return json_load(f)
 
 
-def restore(device, dir_path):
+def restore(device, dir_path, root):
     log.info("开始恢复...")
     if type(device) is not str:
         device = device.device
@@ -796,7 +796,7 @@ def restore(device, dir_path):
     if obb:
         for i in all:
             if i.endswith(".apk"):
-                install_apk(device, os.path.join(dir_path, i))
+                install_apk(device, os.path.join(dir_path, i), [], root)
             elif i.endswith(".obb"):
                 push = ["adb", "-s", device, "push", os.path.join(dir_path, i),
                         "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
