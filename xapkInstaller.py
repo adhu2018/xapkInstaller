@@ -650,7 +650,7 @@ def main(root: str, one: str) -> bool:
     os.chdir(root)
     name_suffix = os.path.split(one)[1]
     name_suffix = name_suffix.rsplit(".", 1)
-    new_path = md5(name_suffix[0])
+    new_path = md5(name_suffix[0])  # md5 用处：避免莫名其妙的文件名导致意料之外的问题
     if len(name_suffix) > 1:
         new_path += f".{name_suffix[1]}"
     del_path = [os.path.join(root, new_path)]
