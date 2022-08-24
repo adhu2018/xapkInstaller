@@ -422,7 +422,7 @@ def findabi(native_code: List[str], abilist: List[str]) -> bool:
 def get_unpack_path(file_path: str) -> str:
     """获取文件解压路径"""
     dir_path, name_suffix = os.path.split(file_path)
-    name = os.path.splitext(name_suffix)[0]  # "suffix" is not accessed
+    name = os.path.splitext(name_suffix)[0]
     unpack_path = os.path.join(dir_path, name)
     return unpack_path
 
@@ -467,8 +467,6 @@ def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc
         elif abc == "-r":
             if uninstall(device.device, manifest["package_name"], root):
                 return install_apk(device, file_path, del_path, root, "")
-            else:
-                sys.exit("备份文件时出现错误")
         elif "INSTALL_FAILED_TEST_ONLY" in msg:
             log.error('INSTALL_FAILED_TEST_ONLY')
             log.info("正在修改安装参数重新安装，请等待...")
@@ -610,7 +608,7 @@ def install_base(device: Device, file_list: List[str]) -> Tuple[List[dict], bool
 
 def install_multiple(install: List[str]) -> Tuple[List[str], bool]:
     # install-multiple
-    run = run_msg(install)[0]  # "msg" is not accessed
+    run = run_msg(install)[0]
     if run.returncode:
         if install[4] == '-rtd':
             install[4] = '-r'
@@ -722,8 +720,6 @@ def main(root: str, one: str) -> bool:
                                 run, msg = run_msg(i)
                                 if run.returncode:
                                     sys.exit(msg)
-                        else:
-                            sys.exit('备份文件时出现错误')
                     else:
                         sys.exit("用户取消安装！")
         return True
@@ -847,13 +843,13 @@ def run_msg(cmd: Union[str, List[str]]):
 
 def uninstall(device: str, package_name: str, root: str):
     dir_path = pull_apk(device, package_name, root)
-    if not dir_path:  # 备份文件时出现错误
-        return False
+    if not dir_path:
+        sys.exit("备份文件时出现错误")
     # cmd = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     cmd = ["adb", "-s", device, "shell", "pm", "uninstall", "-k", package_name]
     log.info("开始卸载...")
-    run = run_msg(cmd)[0]  # "msg" is not accessed
+    run = run_msg(cmd)[0]
     try:
         if run.returncode:
             restore(device, dir_path, root)
