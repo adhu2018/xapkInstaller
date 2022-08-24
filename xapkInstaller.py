@@ -544,8 +544,9 @@ def install_apks_py(device: str, file_path: str, del_path: List[str]) -> Tuple[L
                 f = zip_file.extract(i, del_path[-1])
             else:
                 for a in device.abilist:
-                    if f'standalone-{device.abi}_{device.dpi}.apk' in i:
-                        f = zip_file.extract(i, del_path[-1])
+                    for d in device._drawable:
+                        if f'standalone-{a}_{d}.apk' in i:
+                            f = zip_file.extract(i, del_path[-1])
             if f:
                 return install_apk(device.device, f, del_path, os.getcwd())
             log.error('看来没有...')
