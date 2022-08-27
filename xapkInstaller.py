@@ -35,11 +35,12 @@ _abi = ["armeabi_v7a", "arm64_v8a", "armeabi", "x86_64", "x86", "mips64", "mips"
 _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
              "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl",
              "tr", "vi", "zh"]
-warn_msg = {
+info_msg = {
     "bundletool": "bundletool 可在 "
                   "https://github.com/google/bundletool/releases"
                   " 下载，下载后重命名为 bundletool.jar "
-                  "并将其放置在 xapkInstaller 同一文件夹即可。"
+                  "并将其放置在 xapkInstaller 同一文件夹即可。",
+    "sdktoolow": "安装失败：安卓版本过低！"
 }
 
 
@@ -140,7 +141,7 @@ class Device:
             if _sdk:
                 self._sdk = int(_sdk)
                 return self._sdk
-    
+
     def shell(self, cmd: list):
         c = ['adb', '-s', self.device, 'shell']
         c.extend(cmd)
@@ -149,13 +150,11 @@ class Device:
     # ===================================================
     def _abandon(self, SESSION_ID: str):
         '''中止安装'''
-        # pm install-abandon SESSION_ID
         run, msg = self.shell(["pm", "install-abandon", SESSION_ID])
         if msg:
             log.info(msg)
 
     def _commit(self, SESSION_ID: str):
-        # pm install-commit SESSION_ID
         run, msg = self.shell(["pm", "install-commit", SESSION_ID])
         if run.returncode:
             self._abandon(SESSION_ID)
@@ -165,14 +164,11 @@ class Device:
         return run
 
     def _create(self) -> str:
-        # pm install-create
         run, msg = self.shell(["pm", "install-create"])
         if run.returncode:
             sys.exit(msg)
-        else:
-            # Success: created install session [1234567890]
-            log.info(msg)
-            return msg.strip()[:-1].split("[")[1]
+        log.info(msg)  # Success: created install session [1234567890]
+        return msg.strip()[:-1].split("[")[1]
 
     def _del(self, info):
         for i in info:
@@ -194,7 +190,7 @@ class Device:
         for i in info:
             # pm install-write SESSION_ID SPLIT_NAME PATH
             run, msg = self.shell(["pm", "install-write",
-                                SESSION_ID, i["name"], i["path"]])
+                                   SESSION_ID, i["name"], i["path"]])
             if run.returncode:
                 self._abandon(SESSION_ID)
                 sys.exit(msg)
@@ -204,8 +200,7 @@ class Device:
 def build_apkm_config(device: Device, file_list: List[str], install: List[str]) -> Tuple[dict, List[str]]:
     abi = [f"split_config.{i}.apk" for i in _abi]
     language = [f"split_config.{i}.apk" for i in _language]
-    config = {}
-    config["language"] = []
+    config = {"language": []}
     for i in file_list:
         if i == f"split_config.{device.abi.replace('-', '_')}.apk":
             config["abi"] = i
@@ -227,8 +222,7 @@ def build_apkm_config(device: Device, file_list: List[str], install: List[str]) 
 def build_xapk_config(device: Device, split_apks: List[str], install: List[str]):
     abi = [f"config.{i}" for i in _abi]
     language = [f"config.{i}" for i in _language]
-    config = {}
-    config["language"] = []
+    config = {"language": []}
     for i in split_apks:
         if i["id"] == f"config.{device.abi.replace('-', '_')}":
             config["abi"] = i["file"]
@@ -249,7 +243,7 @@ def build_xapk_config(device: Device, split_apks: List[str], install: List[str])
 
 def check() -> List[str]:
     run, msg = run_msg("adb devices")
-    _devices = tostr(run.stdout).strip().split("\n")[1:]
+    _devices = msg.strip().split("\n")[1:]
     devices = []
     for i in _devices:
         if i.split("\t")[1] != "offline":
@@ -270,13 +264,13 @@ def check() -> List[str]:
 
 def check_by_manifest(device: Device, manifest: dict) -> None:
     if device.sdk < manifest["min_sdk_version"]:
-        sys.exit("安装失败：安卓版本过低！")
-
-    try:
-        if device.sdk > manifest["target_sdk_version"]:
-            log.warning("警告：安卓版本过高！可能存在兼容性问题！")
-    except KeyError:
-        log.warning("`manifest['target_sdk_version']` no found.")
+        sys.exit(info_msg['sdktoolow'])
+    else:
+        try:
+            if device.sdk > manifest["target_sdk_version"]:
+                log.warning("警告：安卓版本过高！可能存在兼容性问题！")
+        except KeyError:
+            log.warning("`manifest['target_sdk_version']` no found.")
 
     abilist = device.abilist
 
@@ -433,13 +427,13 @@ def install_aab(device: str, file_path: str, del_path: List[str], root: str) -> 
     build = ["java", "-jar", "bundletool.jar", "build-apks",
              "--connected-device", "--bundle="+name_suffix,
              "--output="+del_path[-1]]
-    sign = read_config("./config.yaml")
+    sign = read_yaml("./config.yaml")
     if sign["ks"] and sign["ks-pass"] and sign["ks-key-alias"] and sign["key-pass"]:
         for i in sign:
             build.append(f"--{i}={sign[i]}")
     run = run_msg(build)[0]
     if run.returncode:
-        sys.exit(warn_msg['bundletool'])
+        sys.exit(info_msg['bundletool'])
     return install_apks(device, del_path[-1], del_path, root)
 
 
@@ -458,14 +452,14 @@ def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc
         if abc == "-rtd" and "argument expected" in msg:
             log.error('No argument expected after "-rtd"')
             log.info("正在修改安装参数重新安装，请等待...")
-            return install_apk(device, file_path, del_path, root, "-r")
+            return install_apk(device.device, file_path, del_path, root, "-r")
         elif abc == "-r":
             if uninstall(device.device, manifest["package_name"], root):
-                return install_apk(device, file_path, del_path, root, "")
+                return install_apk(device.device, file_path, del_path, root, "")
         elif "INSTALL_FAILED_TEST_ONLY" in msg:
             log.error('INSTALL_FAILED_TEST_ONLY')
             log.info("正在修改安装参数重新安装，请等待...")
-            return install_apk(device, file_path, del_path, root, "-t")
+            return install_apk(device.device, file_path, del_path, root, "-t")
         else:
             sys.exit(1)
     return install, True
@@ -480,7 +474,7 @@ def install_apkm(device: str, file_path: str, del_path: List[str], root: str) ->
     info = read_json(os.path.join(del_path[-1], upfile))
     file_list = zip_file.namelist()
     if device.sdk < int(info["min_api"]):
-        sys.exit("安装失败：安卓版本过低！")
+        sys.exit(info_msg['sdktoolow'])
     checkVersionCode(device.device, info["pname"], info["versioncode"])
     install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
     config, install = build_apkm_config(device, file_list, install)
@@ -522,7 +516,7 @@ def install_apks_java(file_path: str) -> Tuple[List[str], bool]:
         if '[SCREEN_DENSITY]' in msg:
             sys.exit("Missing APKs for [SCREEN_DENSITY] dimensions in the module 'base' for the provided device.")
         else:
-            sys.exit(warn_msg['bundletool'])
+            sys.exit(info_msg['bundletool'])
     return install, True
 
 
@@ -639,7 +633,7 @@ def install_xapk(device: str, file_path: str, del_path: List[str], root: str) ->
         split_apks = manifest["split_apks"]
 
         if device.sdk < int(manifest["min_sdk_version"]):
-            sys.exit("安装失败：安卓版本过低！")
+            sys.exit(info_msg['sdktoolow'])
         elif device.sdk > int(manifest["target_sdk_version"]):
             log.info("警告：安卓版本过高！可能存在兼容性问题！")
 
@@ -650,7 +644,7 @@ def install_xapk(device: str, file_path: str, del_path: List[str], root: str) ->
         config, install = config_language(config, install)
         return install_multiple(install)
     else:
-        install = install_apk(device, manifest["package_name"]+".apk", del_path, root)[0]
+        install = install_apk(device.device, manifest["package_name"]+".apk", del_path, root)[0]
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"] == "EXTERNAL_STORAGE":
@@ -777,13 +771,13 @@ def pull_apk(device: str, package: str, root: str) -> str:
             sys.exit(1)
         cmd = ["adb", "-s", device, "pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
         run, msg = run_msg(cmd)
-        if run.returncode and "No such file or directory" not in msg and "does not exist" not in msg:
+        if run.returncode and ("No such file or directory" not in msg) and ("does not exist" not in msg):
             sys.exit(msg)
         return dir_path
 
 
-def read_config(yaml_file) -> dict:
-    with open(yaml_file, "rb") as f:
+def read_yaml(file) -> dict:
+    with open(file, "rb") as f:
         data = f.read()
     return safe_load(tostr(data))
 
@@ -805,7 +799,7 @@ def restore(device: str, dir_path: str, root: str):
     if obb:
         for i in all:
             if i.endswith(".apk"):
-                install_apk(Device(device), os.path.join(dir_path, i), [], root)
+                install_apk(device, os.path.join(dir_path, i), [], root)
             elif i.endswith(".obb"):
                 push = ["adb", "-s", device, "push", os.path.join(dir_path, i),
                         "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
