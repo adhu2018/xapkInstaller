@@ -124,7 +124,7 @@ class Device:
         return self._locale
 
     def getlocale(self) -> str:
-        self._locale = run_msg(f"adb -s {self.device} shell getprop ro.product.locale")[1].strip()
+        self._locale = run_msg(f"adb -s {self.device} shell getprop ro.product.locale")[1].strip().split('-')[0]
         return self._locale
 
     @property
@@ -209,11 +209,9 @@ def build_apkm_config(device: Device, file_list: List[str], install: List[str]) 
         for d in device.drawable:
             if i == f"split_config.{d}.apk":
                 config["drawable"] = i
-        if i == f"split_config.{device.locale.split('-')[0]}.apk":
-            config["locale"] = i
-        elif i in abi:
-            config[i.split(".")[1]] = i
-        elif i.find("dpi.apk") >= 0:
+        if i == f"split_config.{device.locale}.apk":
+            config["language"].insert(0, i)
+        elif (i in abi) or (i.find("dpi.apk") >= 0):
             config[i.split(".")[1]] = i
         elif i in language:
             config["language"].append(i)
@@ -235,11 +233,9 @@ def build_xapk_config(device: Device, split_apks: List[str], install: List[str])
         for d in device.drawable:
             if i == f"split_config.{d}.apk":
                 config["drawable"] = i
-        if i["id"] == f"config.{device.locale.split('-')[0]}":
-            config["locale"] = i["file"]
-        elif i["id"] in abi:
-            config[i["id"].split(".")[1]] = i["file"]
-        elif i["id"].endswith("dpi"):
+        if i["id"] == f"config.{device.locale}":
+            config["language"].insert(0, i["file"])
+        elif (i["id"] in abi) or i["id"].endswith("dpi"):
             config[i["id"].split(".")[1]] = i["file"]
         elif i["id"] in language:
             config["language"].append(i["file"])
@@ -298,7 +294,7 @@ def checkVersionCode(device: str, package_name: str, fileVersionCode: int, versi
             versionCode = int(i.strip().split("=")[1].split(" ")[0])
     if versionCode == -1:
         input("警告：首次安装需要在手机上点击允许安装！按回车继续...")
-    if fileVersionCode < versionCode:
+    elif fileVersionCode < versionCode:
         if input("警告：降级安装？请确保文件无误！(y/N)").lower() != "y":
             sys.exit("降级安装，用户取消安装。")
     elif fileVersionCode == versionCode:
@@ -330,12 +326,9 @@ def config_drawable(config: dict, install: List[str]):
     return config, install
 
 
-def config_locale(config: dict, install: List[str]):
-    if config.get("locale"):
-        install.append(config["locale"])
-    elif config.get("language"):
-        # 如果自动匹配语言不成功，就添加列表中第一个语言
-        log.warning(f"找不到设备语言一致的语言包，将安装`{config['language'][0]}`语言包。")
+def config_language(config: dict, install: List[str]):
+    if config.get("language"):
+        # 如果有设备语言一致的语言包，会优先安装
         install.append(config["language"][0])
     else:
         log.warning("找不到任意一种语言包！！")
@@ -491,7 +484,7 @@ def install_apkm(device: str, file_path: str, del_path: List[str], root: str) ->
     config, install = build_apkm_config(device, file_list, install)
     config, install = config_abi(config, install, device.abilist)
     config, install = config_drawable(config, install)
-    config, install = config_locale(config, install)
+    config, install = config_language(config, install)
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
     os.chdir(del_path[-1])
@@ -645,14 +638,14 @@ def install_xapk(device: str, file_path: str, del_path: List[str], root: str) ->
 
         if device.sdk < int(manifest["min_sdk_version"]):
             sys.exit("安装失败：安卓版本过低！")
-        if device.sdk > int(manifest["target_sdk_version"]):
+        elif device.sdk > int(manifest["target_sdk_version"]):
             log.info("警告：安卓版本过高！可能存在兼容性问题！")
 
         install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
         config, install = build_xapk_config(device, split_apks, install)
         config, install = config_abi(config, install, device.abilist)
         config, install = config_drawable(config, install)
-        config, install = config_locale(config, install)
+        config, install = config_language(config, install)
         return install_multiple(install)
     else:
         install = install_apk(device, manifest["package_name"]+".apk", del_path, root)[0]
@@ -662,8 +655,7 @@ def install_xapk(device: str, file_path: str, del_path: List[str], root: str) ->
                 push: List[str] = ["adb", "-s", device.device, "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
                 if run_msg(push)[0].returncode:
                     return [install, push], False
-                else:
-                    return [install, push], True
+                return [install, push], True
             else:
                 sys.exit(1)
 
@@ -740,8 +732,6 @@ def main(root: str, one: str) -> bool:
 
 
 def md5(_str: str, encoding='utf-8') -> str:
-    if type(_str) is not str:
-        _str = str(_str)
     m = _md5()
     _str = _str.encode(encoding)
     m.update(_str)
