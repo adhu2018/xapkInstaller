@@ -35,13 +35,12 @@ _abi = ["armeabi_v7a", "arm64_v8a", "armeabi", "x86_64", "x86", "mips64", "mips"
 _language = ["ar", "bn", "de", "en", "et", "es", "fr", "hi", "in", "it",
              "ja", "ko", "ms", "my", "nl", "pt", "ru", "sv", "th", "tl",
              "tr", "vi", "zh"]
-
-
-warn_msg = {}
-warn_msg['bundletool'] = "bundletool 可在 "\
-                         "https://github.com/google/bundletool/releases"\
-                         " 下载，下载后重命名为 bundletool.jar "\
-                         "并将其放置在 xapkInstaller 同一文件夹即可。"
+warn_msg = {
+    "bundletool": "bundletool 可在 "
+                  "https://github.com/google/bundletool/releases"
+                  " 下载，下载后重命名为 bundletool.jar "
+                  "并将其放置在 xapkInstaller 同一文件夹即可。"
+}
 
 
 def tostr(bytes_: bytes) -> str:
@@ -67,7 +66,7 @@ class Device:
         return self._abi
 
     def getabi(self) -> str:
-        self._abi = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abi")[1].strip()
+        self._abi = self.shell(['getprop', 'ro.product.cpu.abi'])[1].strip()
         return self._abi
 
     @property
@@ -77,7 +76,7 @@ class Device:
         return self._abilist
 
     def getabilist(self) -> str:
-        self._abilist = run_msg(f"adb -s {self.device} shell getprop ro.product.cpu.abilist")[1].strip().split(",")
+        self._abilist = self.shell(['getprop', 'ro.product.cpu.abilist'])[1].strip().split(",")
         return self._abilist
 
     @property
@@ -87,7 +86,7 @@ class Device:
         return self._dpi
 
     def getdpi(self) -> int:
-        _dpi = run_msg(f"adb -s {self.device} shell dumpsys window displays")[1]
+        _dpi = self.shell(['dumpsys', 'window', 'displays'])[1]
         for i in _dpi.strip().split("\n"):
             if i.find("dpi") >= 0:
                 for j in i.strip().split(" "):
@@ -124,7 +123,7 @@ class Device:
         return self._locale
 
     def getlocale(self) -> str:
-        self._locale = run_msg(f"adb -s {self.device} shell getprop ro.product.locale")[1].strip().split('-')[0]
+        self._locale = self.shell(['getprop', 'ro.product.locale'])[1].strip().split('-')[0]
         return self._locale
 
     @property
@@ -137,22 +136,27 @@ class Device:
         __sdk = ["ro.build.version.sdk", "ro.product.build.version.sdk",
                  "ro.system.build.version.sdk", "ro.system_ext.build.version.sdk"]
         for i in __sdk:
-            _sdk = run_msg(f"adb -s {self.device} shell getprop {i}")[1].strip()
+            _sdk = self.shell(['getprop', i])[1].strip()
             if _sdk:
                 self._sdk = int(_sdk)
                 return self._sdk
+    
+    def shell(self, cmd: list):
+        c = ['adb', '-s', self.device, 'shell']
+        c.extend(cmd)
+        return run_msg(c)
 
     # ===================================================
     def _abandon(self, SESSION_ID: str):
         '''中止安装'''
         # pm install-abandon SESSION_ID
-        run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-abandon", SESSION_ID])
+        run, msg = self.shell(["pm", "install-abandon", SESSION_ID])
         if msg:
             log.info(msg)
 
     def _commit(self, SESSION_ID: str):
         # pm install-commit SESSION_ID
-        run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-commit", SESSION_ID])
+        run, msg = self.shell(["pm", "install-commit", SESSION_ID])
         if run.returncode:
             self._abandon(SESSION_ID)
             sys.exit(msg)
@@ -162,7 +166,7 @@ class Device:
 
     def _create(self) -> str:
         # pm install-create
-        run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-create"])
+        run, msg = self.shell(["pm", "install-create"])
         if run.returncode:
             sys.exit(msg)
         else:
@@ -172,7 +176,7 @@ class Device:
 
     def _del(self, info):
         for i in info:
-            run, msg = run_msg(["adb", "-s", self.device, "shell", "rm", i["path"]])
+            run, msg = self.shell(["rm", i["path"]])
             if run.returncode:
                 sys.exit(msg)
 
@@ -189,7 +193,7 @@ class Device:
         index = 0
         for i in info:
             # pm install-write SESSION_ID SPLIT_NAME PATH
-            run, msg = run_msg(["adb", "-s", self.device, "shell", "pm", "install-write",
+            run, msg = self.shell(["pm", "install-write",
                                 SESSION_ID, i["name"], i["path"]])
             if run.returncode:
                 self._abandon(SESSION_ID)
@@ -202,7 +206,6 @@ def build_apkm_config(device: Device, file_list: List[str], install: List[str]) 
     language = [f"split_config.{i}.apk" for i in _language]
     config = {}
     config["language"] = []
-    # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
     for i in file_list:
         if i == f"split_config.{device.abi.replace('-', '_')}.apk":
             config["abi"] = i
@@ -226,7 +229,6 @@ def build_xapk_config(device: Device, split_apks: List[str], install: List[str])
     language = [f"config.{i}" for i in _language]
     config = {}
     config["language"] = []
-    # mips, mips64, armeabi, armeabi-v7a, arm64-v8a, x86, x86_64
     for i in split_apks:
         if i["id"] == f"config.{device.abi.replace('-', '_')}":
             config["abi"] = i["file"]
