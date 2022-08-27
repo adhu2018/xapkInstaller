@@ -141,7 +141,7 @@ class Device:
             if _sdk:
                 self._sdk = int(_sdk)
                 return self._sdk
-    
+
     def adb(self, cmd: list):
         c = ['adb', '-s', self.device]
         c.extend(cmd)
@@ -185,7 +185,7 @@ class Device:
         info = []
         for f in file_list:
             info.append({"name": "_".join(f.rsplit(".")[:-1]), "path": "/data/local/tmp/"+f})
-            run, msg = run_msg(["adb", "-s", self.device, "push", f, info[-1]["path"]])
+            run, msg = self.adb(["push", f, info[-1]["path"]])
             if run.returncode:
                 sys.exit(msg)
         return info
