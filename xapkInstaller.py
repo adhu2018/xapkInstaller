@@ -466,7 +466,7 @@ def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc
 
 
 def install_apkm(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
-    device = Device(device)
+    device: Device = Device(device)
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
     upfile = "info.json"
@@ -692,7 +692,7 @@ def main(root: str, one: str) -> bool:
 
             if os.path.isdir(del_path[-1]) and os.path.exists(os.path.join(del_path[-1], "manifest.json")):
                 os.chdir(del_path[-1])
-                install, run = install_xapk(Device(device), del_path[-1], del_path, root)
+                install, run = install_xapk(device, del_path[-1], del_path, root)
                 if run.returncode:
                     printerr(tostr(run.stderr))
                     try:
