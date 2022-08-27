@@ -141,11 +141,16 @@ class Device:
             if _sdk:
                 self._sdk = int(_sdk)
                 return self._sdk
-
-    def shell(self, cmd: list):
-        c = ['adb', '-s', self.device, 'shell']
+    
+    def adb(self, cmd: list):
+        c = ['adb', '-s', self.device]
         c.extend(cmd)
         return run_msg(c)
+
+    def shell(self, cmd: list):
+        c = ['shell']
+        c.extend(cmd)
+        return self.adb(c)
 
     # ===================================================
     def _abandon(self, SESSION_ID: str):
@@ -442,8 +447,8 @@ def install_apk(device: Device, file_path: str, del_path: List[str], root: str, 
     checkVersionCode(device, manifest["package_name"], int(manifest["versionCode"]))
     check_by_manifest(device, manifest)
 
-    install = ["adb", "-s", device.device, "install", abc, name_suffix]
-    run, msg = run_msg(install)
+    install = ["install", abc, name_suffix]
+    run, msg = device.adb(install)
     if run.returncode:
         if abc == "-rtd" and "argument expected" in msg:
             log.error('No argument expected after "-rtd"')
@@ -563,9 +568,9 @@ def install_apks_sai(device: Device, file_path: str, del_path: List[str], versio
             install.extend(file_list)
             return install_multiple(install)
         else:
-            install = ["adb", "-s", device.device, "install", ""]
+            install = ["install", ""]
             install.append(file_list[0])
-            run, msg = run_msg(install)
+            run, msg = device.adb(install)
             if run.returncode:
                 log.error(msg)
                 return install, False
@@ -641,8 +646,8 @@ def install_xapk(device: Device, file_path: str, del_path: List[str], root: str)
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"] == "EXTERNAL_STORAGE":
-                push: List[str] = ["adb", "-s", device.device, "push", i["file"], "/storage/emulated/0/"+i["install_path"]]
-                if run_msg(push)[0].returncode:
+                push: List[str] = ["push", i["file"], "/storage/emulated/0/"+i["install_path"]]
+                if device.adb(push)[0].returncode:
                     return [install, push], False
                 return [install, push], True
             else:
@@ -756,14 +761,14 @@ def pull_apk(device: Device, package: str, root: str) -> str:
         os.mkdir(dir_path)
         try:
             for i in tostr(run.stdout).strip().split("\n"):
-                run, msg = run_msg(["adb", "-s", device.device, "pull", i[8:].strip(), dir_path])
+                run, msg = device.adb(["pull", i[8:].strip(), dir_path])
                 if run.returncode:
                     sys.exit(msg)
         except TypeError as err:
             log.exception(err)
             sys.exit(1)
-        cmd = ["adb", "-s", device.device, "pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
-        run, msg = run_msg(cmd)
+        cmd = ["pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
+        run, msg = device.adb(cmd)
         if run.returncode and ("No such file or directory" not in msg) and ("does not exist" not in msg):
             sys.exit(msg)
         return dir_path
@@ -794,9 +799,9 @@ def restore(device: Device, dir_path: str, root: str):
             if i.endswith(".apk"):
                 install_apk(device, os.path.join(dir_path, i), [], root)
             elif i.endswith(".obb"):
-                push = ["adb", "-s", device.device, "push", os.path.join(dir_path, i),
+                push = ["push", os.path.join(dir_path, i),
                         "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
-                run_msg(push)
+                device.adb(push)
     else:
         if len(all) == 0:
             sys.exit("备份文件夹为空！")
