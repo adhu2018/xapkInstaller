@@ -281,10 +281,8 @@ def check_by_manifest(device: Device, manifest: dict) -> None:
         log.exception(err)
 
 
-def checkVersionCode(device: str, package_name: str, fileVersionCode: int, versionCode: int = -1) -> None:
-    if type(fileVersionCode) is not int:
-        fileVersionCode = int(fileVersionCode)
-    msg = run_msg(["adb", "-s", device, "shell", "pm", "dump", package_name])[1]
+def checkVersionCode(device: Device, package_name: str, fileVersionCode: int, versionCode: int = -1) -> None:
+    msg = device.shell(["pm", "dump", package_name])[1]
     for i in msg.split("\n"):
         if "versionCode" in i:
             versionCode = int(i.strip().split("=")[1].split(" ")[0])
@@ -357,8 +355,7 @@ def dump(file_path: str, del_path: List[str]) -> dict:
     if run.returncode:
         log.warning("未配置aapt或aapt存在错误！")
         return dump_py(file_path, del_path)
-    manifest = {}
-    manifest["native_code"] = []
+    manifest = {"native_code": []}
     for line in msg.split("\n"):
         if "sdkVersion:" in line:
             manifest["min_sdk_version"] = int(line.strip().split("'")[1])
@@ -416,7 +413,7 @@ def get_unpack_path(file_path: str) -> str:
     return unpack_path
 
 
-def install_aab(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
+def install_aab(device: Device, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
     """正式版是需要签名的，配置好才能安装"""
     log.info(install_aab.__doc__)
     name_suffix = os.path.split(file_path)[1]
@@ -437,13 +434,12 @@ def install_aab(device: str, file_path: str, del_path: List[str], root: str) -> 
     return install_apks(device, del_path[-1], del_path, root)
 
 
-def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc: str = "-rtd") -> Tuple[List[str], bool]:
+def install_apk(device: Device, file_path: str, del_path: List[str], root: str, abc: str = "-rtd") -> Tuple[List[str], bool]:
     """安装apk文件"""
-    device: Device = Device(device)
     name_suffix: str = os.path.split(file_path)[1]
     manifest = dump(name_suffix, del_path)
     log.info(manifest)
-    checkVersionCode(device.device, manifest["package_name"], manifest["versionCode"])
+    checkVersionCode(device, manifest["package_name"], int(manifest["versionCode"]))
     check_by_manifest(device, manifest)
 
     install = ["adb", "-s", device.device, "install", abc, name_suffix]
@@ -452,21 +448,20 @@ def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc
         if abc == "-rtd" and "argument expected" in msg:
             log.error('No argument expected after "-rtd"')
             log.info("正在修改安装参数重新安装，请等待...")
-            return install_apk(device.device, file_path, del_path, root, "-r")
+            return install_apk(device, file_path, del_path, root, "-r")
         elif abc == "-r":
-            if uninstall(device.device, manifest["package_name"], root):
-                return install_apk(device.device, file_path, del_path, root, "")
+            if uninstall(device, manifest["package_name"], root):
+                return install_apk(device, file_path, del_path, root, "")
         elif "INSTALL_FAILED_TEST_ONLY" in msg:
             log.error('INSTALL_FAILED_TEST_ONLY')
             log.info("正在修改安装参数重新安装，请等待...")
-            return install_apk(device.device, file_path, del_path, root, "-t")
+            return install_apk(device, file_path, del_path, root, "-t")
         else:
             sys.exit(1)
     return install, True
 
 
-def install_apkm(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
-    device: Device = Device(device)
+def install_apkm(device: Device, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
     upfile = "info.json"
@@ -475,7 +470,7 @@ def install_apkm(device: str, file_path: str, del_path: List[str], root: str) ->
     file_list = zip_file.namelist()
     if device.sdk < int(info["min_api"]):
         sys.exit(info_msg['sdktoolow'])
-    checkVersionCode(device.device, info["pname"], info["versioncode"])
+    checkVersionCode(device, info["pname"], info["versioncode"])
     install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
     config, install = build_apkm_config(device, file_list, install)
     config, install = config_abi(config, install, device.abilist)
@@ -487,7 +482,7 @@ def install_apkm(device: str, file_path: str, del_path: List[str], root: str) ->
     return install_multiple(install)
 
 
-def install_apks(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
+def install_apks(device: Device, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
     os.chdir(root)
     zip_file = ZipFile(file_path)
     file_list = zip_file.namelist()
@@ -520,11 +515,10 @@ def install_apks_java(file_path: str) -> Tuple[List[str], bool]:
     return install, True
 
 
-def install_apks_py(device: str, file_path: str, del_path: List[str]) -> Tuple[List[str], bool]:
+def install_apks_py(device: Device, file_path: str, del_path: List[str]) -> Tuple[List[str], bool]:
     zip_file = ZipFile(file_path)
     file_list = zip_file.namelist()
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
-    device: Device = Device(device)
     if device.sdk < 21:
         log.warning('当前安卓版本不支持多apk模式安装，希望apks里有适合的standalone文件')
         for i in file_list:
@@ -537,7 +531,7 @@ def install_apks_py(device: str, file_path: str, del_path: List[str]) -> Tuple[L
                         if f'standalone-{a}_{d}.apk' in i:
                             f = zip_file.extract(i, del_path[-1])
             if f:
-                return install_apk(device.device, f, del_path, os.getcwd())
+                return install_apk(device, f, del_path, os.getcwd())
             log.error('看来没有...')
             sys.exit('没有适合的standalone文件')
     install = ["adb", "-s", device.device, "install-multiple", ""]
@@ -547,7 +541,7 @@ def install_apks_py(device: str, file_path: str, del_path: List[str]) -> Tuple[L
     return install_multiple(install)
 
 
-def install_apks_sai(device: str, file_path: str, del_path: List[str], version: int) -> Tuple[List[str], bool]:
+def install_apks_sai(device: Device, file_path: str, del_path: List[str], version: int) -> Tuple[List[str], bool]:
     '''用于安装SAI生成的apks文件'''
     del_path.append(os.path.join(os.getcwd(), get_unpack_path(file_path)))
     zip_file = ZipFile(file_path)
@@ -565,11 +559,11 @@ def install_apks_sai(device: str, file_path: str, del_path: List[str], version: 
         checkVersionCode(device, data['package'], data['version_code'])
 
         if data['split_apk']:
-            install = ["adb", "-s", device, "install-multiple", ""]
+            install = ["adb", "-s", device.device, "install-multiple", ""]
             install.extend(file_list)
             return install_multiple(install)
         else:
-            install = ["adb", "-s", device, "install", ""]
+            install = ["adb", "-s", device.device, "install", ""]
             install.append(file_list[0])
             run, msg = run_msg(install)
             if run.returncode:
@@ -620,15 +614,14 @@ def install_multiple(install: List[str]) -> Tuple[List[str], bool]:
     return install, False
 
 
-def install_xapk(device: str, file_path: str, del_path: List[str], root: str) -> Tuple[List[Union[str, List[str]]], bool]:
+def install_xapk(device: Device, file_path: str, del_path: List[str], root: str) -> Tuple[List[Union[str, List[str]]], bool]:
     """安装xapk文件"""
-    device: Device = Device(device)
     os.chdir(file_path)
     log.info("开始安装...")
     if not os.path.isfile("manifest.json"):
         sys.exit(f"安装失败：路径中没有`manifest.json`。{file_path!r}不是`xapk`安装包的解压路径！")
     manifest = read_json("manifest.json")
-    checkVersionCode(device.device, manifest["package_name"], manifest["version_code"])
+    checkVersionCode(device, manifest["package_name"], manifest["version_code"])
     if not manifest.get("expansions"):
         split_apks = manifest["split_apks"]
 
@@ -644,7 +637,7 @@ def install_xapk(device: str, file_path: str, del_path: List[str], root: str) ->
         config, install = config_language(config, install)
         return install_multiple(install)
     else:
-        install = install_apk(device.device, manifest["package_name"]+".apk", del_path, root)[0]
+        install = install_apk(device, manifest["package_name"]+".apk", del_path, root)[0]
         expansions = manifest["expansions"]
         for i in expansions:
             if i["install_location"] == "EXTERNAL_STORAGE":
@@ -656,7 +649,7 @@ def install_xapk(device: str, file_path: str, del_path: List[str], root: str) ->
                 sys.exit(1)
 
 
-# device: str, file_path: str, del_path: List[str], root: str[, abc: str] -> Tuple[List[Union[str, List[str]]], bool]
+# device: Device, file_path: str, del_path: List[str], root: str[, abc: str] -> Tuple[List[Union[str, List[str]]], bool]
 installSuffix = [".aab", ".apk", ".apkm", ".apks", ".xapk"]
 installSelector = {}
 installSelector[".aab"] = install_aab
@@ -686,13 +679,13 @@ def main(root: str, one: str) -> bool:
                 del_path.append(unpack(copy[1]))
                 os.chdir(del_path[-1])
             elif suffix in installSuffix:
-                return installSelector[suffix](device, copy[1], del_path, root)[1]
+                return installSelector[suffix](Device(device), copy[1], del_path, root)[1]
             elif os.path.isfile(copy[1]):
                 sys.exit(f"{copy[1]!r}不是`{'/'.join(installSuffix)}`安装包！")
 
             if os.path.isdir(del_path[-1]) and os.path.exists(os.path.join(del_path[-1], "manifest.json")):
                 os.chdir(del_path[-1])
-                install, run = install_xapk(device, del_path[-1], del_path, root)
+                install, run = install_xapk(Device(device), del_path[-1], del_path, root)
                 if run.returncode:
                     printerr(tostr(run.stderr))
                     try:
@@ -704,7 +697,7 @@ def main(root: str, one: str) -> bool:
                         log.exception(err)
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(y/N)").lower() == 'y':
                         package_name: str = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
-                        if uninstall(device, package_name, root):
+                        if uninstall(Device(device), package_name, root):
                             for i in install:
                                 run, msg = run_msg(i)
                                 if run.returncode:
@@ -751,9 +744,9 @@ def printerr(err: str):
         log.error(err)
 
 
-def pull_apk(device: str, package: str, root: str) -> str:
+def pull_apk(device: Device, package: str, root: str) -> str:
     log.info("正在备份安装包...")
-    run, msg = run_msg(["adb", "-s", device, "shell", "pm", "path", package])
+    run, msg = device.shell(["pm", "path", package])
     if run.returncode:
         sys.exit(msg)
     else:
@@ -763,13 +756,13 @@ def pull_apk(device: str, package: str, root: str) -> str:
         os.mkdir(dir_path)
         try:
             for i in tostr(run.stdout).strip().split("\n"):
-                run, msg = run_msg(["adb", "-s", device, "pull", i[8:].strip(), dir_path])
+                run, msg = run_msg(["adb", "-s", device.device, "pull", i[8:].strip(), dir_path])
                 if run.returncode:
                     sys.exit(msg)
         except TypeError as err:
             log.exception(err)
             sys.exit(1)
-        cmd = ["adb", "-s", device, "pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
+        cmd = ["adb", "-s", device.device, "pull", "/storage/emulated/0/Android/obb/"+package, dir_path]
         run, msg = run_msg(cmd)
         if run.returncode and ("No such file or directory" not in msg) and ("does not exist" not in msg):
             sys.exit(msg)
@@ -787,7 +780,7 @@ def read_json(file) -> dict:
         return json_load(f)
 
 
-def restore(device: str, dir_path: str, root: str):
+def restore(device: Device, dir_path: str, root: str):
     log.info("开始恢复...")
     os.chdir(dir_path)
     all = os.listdir(dir_path)
@@ -801,7 +794,7 @@ def restore(device: str, dir_path: str, root: str):
             if i.endswith(".apk"):
                 install_apk(device, os.path.join(dir_path, i), [], root)
             elif i.endswith(".obb"):
-                push = ["adb", "-s", device, "push", os.path.join(dir_path, i),
+                push = ["adb", "-s", device.device, "push", os.path.join(dir_path, i),
                         "/storage/emulated/0/Android/obb/"+os.path.split(dir_path)[-1]]
                 run_msg(push)
     else:
@@ -810,7 +803,7 @@ def restore(device: str, dir_path: str, root: str):
         elif len(all) == 1:
             main(root, all[0])
         elif len(all) > 1:
-            install = ["adb", "-s", device, "install-multiple", "-rtd"]
+            install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
             install.extend(all)
             install_multiple(install)
     os.chdir(root)
@@ -828,15 +821,14 @@ def run_msg(cmd: Union[str, List[str]]):
     return run, str()
 
 
-def uninstall(device: str, package_name: str, root: str):
+def uninstall(device: Device, package_name: str, root: str):
     dir_path = pull_apk(device, package_name, root)
     if not dir_path:
         sys.exit("备份文件时出现错误")
     # cmd = ["adb", "uninstall", package_name]
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
-    cmd = ["adb", "-s", device, "shell", "pm", "uninstall", "-k", package_name]
     log.info("开始卸载...")
-    run = run_msg(cmd)[0]
+    run = device.shell(["pm", "uninstall", "-k", package_name])[0]
     try:
         if run.returncode:
             restore(device, dir_path, root)
