@@ -75,7 +75,7 @@ class Device:
             self.getabilist()
         return self._abilist
 
-    def getabilist(self) -> str:
+    def getabilist(self) -> List[str]:
         self._abilist = self.shell(['getprop', 'ro.product.cpu.abilist'])[1].strip().split(",")
         return self._abilist
 
