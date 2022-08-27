@@ -448,7 +448,7 @@ def install_aab(device: str, file_path: str, del_path: List[str], root: str) -> 
     return install_apks(device, del_path[-1], del_path, root)
 
 
-def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc: str="-rtd") -> Tuple[List[str], bool]:
+def install_apk(device: str, file_path: str, del_path: List[str], root: str, abc: str = "-rtd") -> Tuple[List[str], bool]:
     """安装apk文件"""
     device: Device = Device(device)
     name_suffix: str = os.path.split(file_path)[1]
