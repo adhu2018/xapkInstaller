@@ -3,17 +3,22 @@
 
 身在福中不知福。。 [SAI](https://github.com/Aefyr/SAI) 是支持 [Shizuku](https://github.com/RikkaApps/Shizuku) 模式的，~~本项目将停止维护~~。  
 
-环境配置：  
+使用环境：  
 
 - `*.xapk` : [`adb`](https://dl.google.com/android/repository/platform-tools-latest-windows.zip?hl=zh-cn)   
-  - `xapk_version==1 `  
+  - `xapk_version==1`  
     - `*.apk` ：[`aapt(非必要)`](https://dl.androidaapt.com/aapt-windows.zip)  
     - `*.obb`  
-  - `xapk_version==2 `  
-- `*.apk` 需要 `adb`, `aapt(非必要)`  
-- `*.aab => *.apks` 需要 `java`, [`bundletool.jar`](https://github.com/google/bundletool/releases)  
-- `*.apkm` 需要 `adb`  
-- `*.apks` 需要 `java(非必要)`, `bundletool.jar(非必要)`  
+  - `xapk_version==2`  
+- `*.apk` : `adb`, `aapt(非必要)`  
+- `*.aab => *.apks` : `java`, [`bundletool.jar`](https://github.com/google/bundletool/releases)  
+- `*.apkm` : `adb`  
+- `*.apks`  
+  - 标准apks(以下二选一)  
+    -  `adb`  
+    -  `java`, `bundletool.jar`  
+  - 由SAI生成的apks  
+    -  `adb`   
 
 编译：
 
