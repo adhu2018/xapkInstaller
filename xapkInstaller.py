@@ -143,7 +143,9 @@ class Device:
                 return self._sdk
 
     def adb(self, cmd: list):
-        c = ['adb', '-s', self.device]
+        c = ['adb']
+        if self.device:
+            c.extend(['-s', self.device])
         c.extend(cmd)
         return run_msg(c)
 
@@ -476,7 +478,7 @@ def install_apkm(device: Device, file_path: str, del_path: List[str], root: str)
     if device.sdk < int(info["min_api"]):
         sys.exit(info_msg['sdktoolow'])
     checkVersionCode(device, info["pname"], info["versioncode"])
-    install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
+    install = ["install-multiple", "-rtd"]
     config, install = build_apkm_config(device, file_list, install)
     config, install = config_abi(config, install, device.abilist)
     config, install = config_drawable(config, install)
@@ -484,7 +486,7 @@ def install_apkm(device: Device, file_path: str, del_path: List[str], root: str)
     for i in install[5:]:
         zip_file.extract(i, del_path[-1])
     os.chdir(del_path[-1])
-    return install_multiple(install)
+    return install_multiple(device, install)
 
 
 def install_apks(device: Device, file_path: str, del_path: List[str], root: str) -> Tuple[List[str], bool]:
@@ -539,11 +541,11 @@ def install_apks_py(device: Device, file_path: str, del_path: List[str]) -> Tupl
                 return install_apk(device, f, del_path, os.getcwd())
             log.error('看来没有...')
             sys.exit('没有适合的standalone文件')
-    install = ["adb", "-s", device.device, "install-multiple", ""]
+    install = ["install-multiple", ""]
     for i in file_list:
         if i.startswith('splits/'):
             install.append(zip_file.extract(i, del_path[-1]))
-    return install_multiple(install)
+    return install_multiple(device, install)
 
 
 def install_apks_sai(device: Device, file_path: str, del_path: List[str], version: int) -> Tuple[List[str], bool]:
@@ -564,9 +566,9 @@ def install_apks_sai(device: Device, file_path: str, del_path: List[str], versio
         checkVersionCode(device, data['package'], data['version_code'])
 
         if data['split_apk']:
-            install = ["adb", "-s", device.device, "install-multiple", ""]
+            install = ["install-multiple", ""]
             install.extend(file_list)
-            return install_multiple(install)
+            return install_multiple(device, install)
         else:
             install = ["install", ""]
             install.append(file_list[0])
@@ -595,18 +597,18 @@ def install_base(device: Device, file_list: List[str]) -> Tuple[List[dict], bool
     return info, True
 
 
-def install_multiple(install: List[str]) -> Tuple[List[str], bool]:
+def install_multiple(device: Device, install: List[str]) -> Tuple[List[str], bool]:
     # install-multiple
-    run = run_msg(install)[0]
+    run = device.adb(install)[0]
     if run.returncode:
         if install[4] == '-rtd':
             install[4] = '-r'
             log.info("正在修改安装参数重新安装，请等待...")
-            return install_multiple(install)
+            return install_multiple(device, install)
         elif install[4] == 'r':
             install[4] = ''
             log.info("正在修改安装参数重新安装，请等待...")
-            return install_multiple(install)
+            return install_multiple(device, install)
         elif install[4] == '':
             printerr(tostr(run.stderr))
             try:
@@ -635,12 +637,12 @@ def install_xapk(device: Device, file_path: str, del_path: List[str], root: str)
         elif device.sdk > int(manifest["target_sdk_version"]):
             log.info("警告：安卓版本过高！可能存在兼容性问题！")
 
-        install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
+        install = ["install-multiple", "-rtd"]
         config, install = build_xapk_config(device, split_apks, install)
         config, install = config_abi(config, install, device.abilist)
         config, install = config_drawable(config, install)
         config, install = config_language(config, install)
-        return install_multiple(install)
+        return install_multiple(device, install)
     else:
         install = install_apk(device, manifest["package_name"]+".apk", del_path, root)[0]
         expansions = manifest["expansions"]
@@ -808,9 +810,9 @@ def restore(device: Device, dir_path: str, root: str):
         elif len(all) == 1:
             main(root, all[0])
         elif len(all) > 1:
-            install = ["adb", "-s", device.device, "install-multiple", "-rtd"]
+            install = ["install-multiple", "-rtd"]
             install.extend(all)
-            install_multiple(install)
+            install_multiple(device, install)
     os.chdir(root)
 
 
