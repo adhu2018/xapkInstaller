@@ -601,19 +601,19 @@ def install_multiple(device: Device, install: List[str]) -> Tuple[List[str], boo
     # install-multiple
     run = device.adb(install)[0]
     if run.returncode:
-        if install[4] == '-rtd':
-            install[4] = '-r'
+        if install[1] == '-rtd':
+            install[1] = '-r'
             log.info("正在修改安装参数重新安装，请等待...")
             return install_multiple(device, install)
-        elif install[4] == 'r':
-            install[4] = ''
+        elif install[1] == 'r':
+            install[1] = ''
             log.info("正在修改安装参数重新安装，请等待...")
             return install_multiple(device, install)
-        elif install[4] == '':
+        elif install[1] == '':
             printerr(tostr(run.stderr))
             try:
                 log.info("使用备用方案")
-                run = install_base(install[2], install[5:])[1]
+                run = install_base(device, install[2:])[1]
                 if not run.returncode:
                     return install, True
             except Exception as err:
