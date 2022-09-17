@@ -51,14 +51,14 @@ def tostr(bytes_: bytes) -> str:
 class Device:
     __slots__ = ['_abi', '_abilist', '_dpi', '_drawable', '_locale', '_sdk', 'device']
 
-    def __init__(self, device: str):
+    def __init__(self, device: str=None):
         self._abi = None
         self._abilist = None
         self._dpi = None
         self._drawable = None
         self._locale = None
         self._sdk = None
-        self.device = device
+        self.device = device  # 连接多个设备时使用
 
     @property
     def abi(self) -> str:
