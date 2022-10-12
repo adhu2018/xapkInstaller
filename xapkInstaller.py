@@ -854,7 +854,8 @@ def unpack(file_path: str) -> str:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    argv = sys.argv
+    if len(argv) < 2 or (len(argv) == 2 and '-l' in argv):
         print("缺少参数！")
         print("xapkInstaller <filepath or dirpath>")
         print("例如：")
@@ -863,13 +864,25 @@ if __name__ == "__main__":
         print("    xapkInstaller ./abc/")
         print("    xapkInstaller abc.apkm abc.apks abc.xapk ./abc/")
         pause()
-    root = os.path.split(sys.argv[0])[0]
+
+    if '-l' in argv:
+        argv.remove('-l')
+    else:
+        logging.disable(logging.DEBUG)
+        logging.disable(logging.INFO)
+        logging.disable(logging.WARNING)
+        '''
+        logging.disable(logging.ERROR)
+        logging.disable(logging.CRITICAL)
+        '''
+
+    root = os.path.split(argv[0])[0]
     if not root:
         root = os.getcwd()
-    _len_ = len(sys.argv[1:])
+    _len_ = len(argv[1:])
     success = 0
     try:
-        for i, one in enumerate(sys.argv[1:]):
+        for i, one in enumerate(argv[1:]):
             log.info(f"正在安装第{i+1}/{_len_}个...")
             log.info(str(one)+' start')
             if main(root, one):
