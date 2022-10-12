@@ -51,7 +51,7 @@ def tostr(bytes_: bytes) -> str:
 class Device:
     __slots__ = ['_abi', '_abilist', '_dpi', '_drawable', '_locale', '_sdk', 'device']
 
-    def __init__(self, device: str=None):
+    def __init__(self, device: str = None):
         self._abi = None
         self._abilist = None
         self._dpi = None
