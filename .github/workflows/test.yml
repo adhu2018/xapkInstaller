@@ -54,7 +54,7 @@ jobs:
     - name: print changelog
       run: |
         chcp 65001
-        type Release-CHANGELOG.txt >> $GITHUB_OUTPUT
+        type Release-CHANGELOG.txt
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
