@@ -54,7 +54,7 @@ jobs:
     - name: print changelog
       run: |
         chcp 65001
-        echo "test 123 type Release-CHANGELOG.txt" >> $GITHUB_STEP_SUMMARY
+        type Release-CHANGELOG.txt
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
