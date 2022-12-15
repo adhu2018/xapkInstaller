@@ -131,6 +131,9 @@ dmypy.json
 # vscode
 .vscode/
 
+# pycharm
+.idea/
+
 # Other
 *.xapk
 *.apk
