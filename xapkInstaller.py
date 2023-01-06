@@ -276,11 +276,18 @@ def check_by_manifest(device: Device, manifest: dict) -> None:
         log.exception('Failed in check_by_manifest->findabi.')
 
 
-def checkVersionCode(device: Device, package_name: str, fileVersionCode: int, versionCode: int = -1) -> None:
+def checkVersion(device: Device, package_name: str, fileVersionCode: int, versionCode: int = -1) -> None:
     msg = device.shell(["pm", "dump", package_name])[1]
     for i in msg.split("\n"):
         if "versionCode" in i:
             versionCode = int(i.strip().split("=")[1].split(" ")[0])
+        elif "primaryCpuAbi" in i:
+            primaryCpuAbi = i.strip().split("=")[1]
+    '''
+    if primaryCpuAbi=='arm64-v8a' and thisAbi!=primaryCpuAbi:
+        if input("警告：从64位变更到32位？请确保文件无误！(y/N)").lower() != "y":
+            sys.exit("用户取消安装。")
+    '''
     if versionCode == -1:
         input("警告：首次安装需要在手机上点击允许安装！按回车继续...")
     elif fileVersionCode < versionCode:
@@ -434,7 +441,7 @@ def install_apk(device: Device, file: str, del_path: List[str], root: str, abc: 
     name_suffix: str = os.path.split(file)[1]
     manifest = dump(name_suffix, del_path)
     log.info(manifest)
-    checkVersionCode(device, manifest["package_name"], int(manifest["versionCode"]))
+    checkVersion(device, manifest["package_name"], int(manifest["versionCode"]))
     check_by_manifest(device, manifest)
 
     install = ["install", abc, name_suffix]
@@ -465,7 +472,7 @@ def install_apkm(device: Device, file: str, del_path: List[str], root: str) -> T
     file_list = zip_file.namelist()
     if device.sdk < int(info["min_api"]):
         sys.exit(info_msg['sdktoolow'])
-    checkVersionCode(device, info["pname"], info["versioncode"])
+    checkVersion(device, info["pname"], info["versioncode"])
     install = ["install-multiple", "-rtd"]
     config, install = build_apkm_config(device, file_list, install)
     config, install = config_abi(config, install, device.abilist)
@@ -551,7 +558,7 @@ def install_apks_sai(device: Device, file: str, del_path: List[str], version: in
         upfile = "meta.sai_v2.json"
         zip_file.extract(upfile, del_path[-1])
         data = read_json(os.path.join(del_path[-1], upfile))
-        checkVersionCode(device, data['package'], data['version_code'])
+        checkVersion(device, data['package'], data['version_code'])
 
         if data.get('split_apk'):
             install = ["install-multiple", ""]
@@ -615,7 +622,7 @@ def install_xapk(device: Device, file: str, del_path: List[str], root: str) -> T
     if not os.path.isfile("manifest.json"):
         sys.exit(f"安装失败：路径中没有`manifest.json`。{file!r}不是`xapk`安装包的解压路径！")
     manifest = read_json("manifest.json")
-    checkVersionCode(device, manifest["package_name"], manifest["version_code"])
+    checkVersion(device, manifest["package_name"], manifest["version_code"])
     if not manifest.get("expansions"):
         split_apks = manifest["split_apks"]
 
