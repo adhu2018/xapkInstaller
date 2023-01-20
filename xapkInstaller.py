@@ -425,7 +425,7 @@ def install_aab(device: Device, file: str, del_path: List[str], root: str) -> Tu
              "--connected-device", "--bundle="+name_suffix,
              "--output="+del_path[-1]]
     sign = read_yaml("./config.yaml")
-    if sign["ks"] and sign["ks-pass"] and sign["ks-key-alias"] and sign["key-pass"]:
+    if sign.get("ks") and sign.get("ks-pass") and sign.get("ks-key-alias") and sign.get("key-pass"):
         for i in sign:
             build.append(f"--{i}={sign[i]}")
     run = run_msg(build)[0]
@@ -765,6 +765,8 @@ def pull_apk(device: Device, package: str, root: str) -> str:
 
 
 def read_yaml(file) -> dict:
+    if not os.path.exists(file):
+        return {}
     with open(file, "rb") as f:
         data = f.read()
     return safe_load(tostr(data))
@@ -820,7 +822,7 @@ def uninstall(device: Device, package_name: str, root: str):
     dir_path = pull_apk(device, package_name, root)
     if not dir_path:
         sys.exit("备份文件时出现错误")
-    # cmd = ["adb", "uninstall", package_name]
+    # adb uninstall package_name
     # 卸载应用时尝试保留应用数据和缓存数据，但是这样处理后只能先安装相同包名的软件再正常卸载才能清除数据！！
     log.info("开始卸载...")
     run = device.shell(["pm", "uninstall", "-k", package_name])[0]
