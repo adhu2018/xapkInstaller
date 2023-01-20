@@ -49,9 +49,10 @@ def tostr(bytes_: bytes) -> str:
 
 
 class Device:
-    __slots__ = ['_abi', '_abilist', '_dpi', '_drawable', '_locale', '_sdk', 'device']
+    __slots__ = ['ADB', '_abi', '_abilist', '_dpi', '_drawable', '_locale', '_sdk', 'device']
 
     def __init__(self, device: str = None):
+        self.ADB =  'adb'
         self._abi = None
         self._abilist = None
         self._dpi = None
@@ -130,8 +131,9 @@ class Device:
                 self._sdk = int(_sdk)
                 return self._sdk
 
+    # ===================================================
     def adb(self, cmd: list):
-        c = ['adb']
+        c = [self.ADB]
         if self.device:
             c.extend(['-s', self.device])
         c.extend(cmd)
@@ -236,9 +238,15 @@ def build_xapk_config(device: Device, split_apks: List[dict], install: List[str]
     return config, install
 
 
-def check() -> List[str]:
-    run, msg = run_msg("adb devices")
+def check(ADB=None) -> List[str]:
+    if not ADB:
+        ADB = check_adb()
+    run, msg = run_msg([ADB, 'devices'])
     _devices = msg.strip().split("\n")[1:]
+    if _devices==['* daemon started successfully']:
+        log.info('初次启动adb服务')
+        run, msg = run_msg([ADB, 'devices'])
+        _devices = msg.strip().split("\n")[1:]
     devices = []
     for i in _devices:
         if i.split("\t")[1] != "offline":
@@ -255,6 +263,23 @@ def check() -> List[str]:
         if input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() != "y":
             sys.exit("用户取消安装！")
     return devices
+
+
+def check_adb(conf='config.yaml'):
+    conf = read_yaml(conf)
+    ADB = conf.get('ADB', 'adb')
+    if not os.path.exists(ADB):
+        # 配置文件有误或为空时，使用系统环境中的adb
+        try:
+            run, msg = run_msg(['adb', '--version'])
+        except FileNotFoundError:
+            msg = ''
+        if 'version' not in msg:
+            log.error('未配置adb')
+            return []
+        log.info(msg.strip())
+        ADB = 'adb'
+    return ADB
 
 
 def check_by_manifest(device: Device, manifest: dict) -> None:
@@ -666,33 +691,36 @@ def main(root: str, one: str) -> bool:
     copy_files(copy)
 
     try:
-        devices = check()
+        ADB = check_adb()
+        devices = check(ADB)
         suffix = os.path.splitext(os.path.split(copy[1])[1])[1]
 
         for device in devices:
+            device = Device(device)
+            device.ADB = ADB
             if copy[1].endswith(".xapk"):
                 del_path.append(unpack(copy[1]))
                 os.chdir(del_path[-1])
             elif suffix in installSuffix:
-                return installSelector[suffix](Device(device), copy[1], del_path, root)[1]
+                return installSelector[suffix](device, copy[1], del_path, root)[1]
             elif os.path.isfile(copy[1]):
                 sys.exit(f"{copy[1]!r}不是`{'/'.join(installSuffix)}`安装包！")
 
             if os.path.isdir(del_path[-1]) and os.path.exists(os.path.join(del_path[-1], "manifest.json")):
                 os.chdir(del_path[-1])
-                install, run = install_xapk(Device(device), del_path[-1], del_path, root)
+                install, run = install_xapk(device, del_path[-1], del_path, root)
                 if run.returncode:
                     print_err(tostr(run.stderr))
                     try:
                         log.info("使用备用方案")
-                        run = install_base(Device(device), install[5:])[1]
+                        run = install_base(device, install[5:])[1]
                         if not run.returncode:
                             return True
                     except Exception:
                         log.exception('Failed in main->install_base.')
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(y/N)").lower() == 'y':
                         package_name: str = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
-                        if uninstall(Device(device), package_name, root):
+                        if uninstall(device, package_name, root):
                             for i in install:
                                 run, msg = run_msg(i)
                                 if run.returncode:
