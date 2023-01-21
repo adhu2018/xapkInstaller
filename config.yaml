@@ -3,3 +3,6 @@ ks: "./keystore.jks"  # `/path/to/keystore.jks`
 ks-pass: "pass:abc1234"  # `pass:password` or `file:/path/to/keystore.pwd`
 ks-key-alias: "mykey"  # `alias`
 key-pass: "pass:hhh4567"  # `pass:password` or `file:/path/to/key.pwd`
+adb: "/path/to/adb.exe"  # 错误时会检测系统环境中有没有adb
+java: "/path/to/java.exe"
+aapt: "/path/to/aapt.exe"
