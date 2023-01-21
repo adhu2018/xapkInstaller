@@ -254,19 +254,18 @@ def check(ADB=None) -> List[str]:
 
     # adb -s <device-id/ip:port> shell xxx
     if run.returncode:
-        sys.exit(msg)
+        log.error(msg)
     elif len(devices) == 0:
-        sys.exit("安装失败：手机未连接电脑！")
+        log.error("安装失败：手机未连接电脑！")
     elif len(devices) == 1:
         pass
     elif len(devices) > 1:
-        if input("检测到1个以上的设备，是否进行多设备安装？(y/N)").lower() != "y":
-            sys.exit("用户取消安装！")
+        log.info('检测到1个以上的设备，将进行多设备安装')
     return devices
 
 
 def check_sth(key, conf='config.yaml'):
-    if key not in ['adb', 'java', 'aapt']:
+    if key not in ['adb', 'java', 'aapt', 'bundletool']:
         return None
     conf = read_yaml(conf)
     path = conf.get(key, key)
@@ -277,9 +276,12 @@ def check_sth(key, conf='config.yaml'):
                 run, msg = run_msg([key, '--version'])
             elif key in ['aapt']:
                 run, msg = run_msg([key, 'v'])
+            elif key in ['bundletool']:
+                run, msg = run_msg([check_sth('java'), '-jar', key+'.jar', 'version'])
         except FileNotFoundError:
             run = None
         if run and (run.returncode == 0):
+            log.info(f'check_sth({key!r})')
             log.info(msg.strip())
             return key
         log.error(f'未配置{key}')
@@ -698,6 +700,8 @@ def main(root: str, one: str) -> bool:
     try:
         ADB = check_sth('adb')
         devices = check(ADB)
+        if len(devices) == 0:
+            sys.exit("安装失败：手机未连接电脑！")
         suffix = os.path.splitext(os.path.split(copy[1])[1])[1]
 
         for device in devices:
