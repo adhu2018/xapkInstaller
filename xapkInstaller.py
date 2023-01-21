@@ -52,7 +52,7 @@ class Device:
     __slots__ = ['ADB', '_abi', '_abilist', '_dpi', '_drawable', '_locale', '_sdk', 'device']
 
     def __init__(self, device: str = None):
-        self.ADB =  'adb'
+        self.ADB = 'adb'
         self._abi = None
         self._abilist = None
         self._dpi = None
@@ -243,7 +243,7 @@ def check(ADB=None) -> List[str]:
         ADB = check_adb()
     run, msg = run_msg([ADB, 'devices'])
     _devices = msg.strip().split("\n")[1:]
-    if _devices==['* daemon started successfully']:
+    if _devices == ['* daemon started successfully']:
         log.info('初次启动adb服务')
         run, msg = run_msg([ADB, 'devices'])
         _devices = msg.strip().split("\n")[1:]
@@ -308,7 +308,7 @@ def checkVersion(device: Device, package_name: str, fileVersionCode: int, versio
             versionCode = int(i.strip().split("=")[1].split(" ")[0])
         elif "primaryCpuAbi" in i:
             primaryCpuAbi = i.strip().split("=")[1]
-    if (primaryCpuAbi=='arm64-v8a' and abis) and (primaryCpuAbi not in abis):
+    if (primaryCpuAbi == 'arm64-v8a' and abis) and (primaryCpuAbi not in abis):
         if input("警告：从64位变更到32位？请确保文件无误！(y/N)").lower() != "y":
             sys.exit("用户取消安装。")
     if versionCode == -1:
