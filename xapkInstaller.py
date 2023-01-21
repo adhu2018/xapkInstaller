@@ -240,7 +240,7 @@ def build_xapk_config(device: Device, split_apks: List[dict], install: List[str]
 
 def check(ADB=None) -> List[str]:
     if not ADB:
-        ADB = check_adb()
+        ADB = check_sth('adb')
     run, msg = run_msg([ADB, 'devices'])
     _devices = msg.strip().split("\n")[1:]
     if _devices == ['* daemon started successfully']:
@@ -265,21 +265,26 @@ def check(ADB=None) -> List[str]:
     return devices
 
 
-def check_adb(conf='config.yaml'):
+def check_sth(key, conf='config.yaml'):
+    if key not in ['adb', 'java', 'aapt']:
+        return None
     conf = read_yaml(conf)
-    ADB = conf.get('ADB', 'adb')
-    if not os.path.exists(ADB):
+    path = conf.get(key, key)
+    if not os.path.exists(path):
         # 配置文件有误或为空时，使用系统环境中的adb
         try:
-            run, msg = run_msg(['adb', '--version'])
+            if key in ['adb', 'java']:
+                run, msg = run_msg([key, '--version'])
+            elif key in ['aapt']:
+                run, msg = run_msg([key, 'v'])
         except FileNotFoundError:
-            msg = ''
-        if 'version' not in msg:
-            log.error('未配置adb')
-            return []
-        log.info(msg.strip())
-        ADB = 'adb'
-    return ADB
+            run = None
+        if run and (run.returncode == 0):
+            log.info(msg.strip())
+            return key
+        log.error(f'未配置{key}')
+        return None
+    return path
 
 
 def check_by_manifest(device: Device, manifest: dict) -> None:
@@ -691,7 +696,7 @@ def main(root: str, one: str) -> bool:
     copy_files(copy)
 
     try:
-        ADB = check_adb()
+        ADB = check_sth('adb')
         devices = check(ADB)
         suffix = os.path.splitext(os.path.split(copy[1])[1])[1]
 
