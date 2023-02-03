@@ -1,3 +1,15 @@
+0.23.020318
+新增 check_sth
+新增 install_apks_java,install_apks_py, install_apks_sai, install_multiple
+新增 Device.adb, Device.shell
+修复 restore, install_apk, install_xapk, install_apkm
+修复 类型提示错误
+去除 Device.getabi, Device.getabilist, Device.getlocale
+添加 必要的类型提示
+优化 尝试统一返回值类型
+优化 默认禁止大部分提示信息，可使用 `-l` 参数来启用
+优化 部分情况下从64位变更到32位时会提醒
+其他 checkVersionCode => checkVersion, config_locale => config_language, read_config => read_yaml, warn_msg => info_msg
 0.22.073014
 添加 不同结束标志
 去除 traceback
