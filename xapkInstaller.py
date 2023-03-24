@@ -399,7 +399,11 @@ def dump(file_path: str, del_path: List[str]) -> dict:
         elif "package: name=" in line:
             line = line.strip().split("'")
             manifest["package_name"] = line[1]
-            manifest["versionCode"] = int(line[3])
+            try:
+                manifest["versionCode"] = int(line[3])
+            except ValueError:
+                log.error(f"err in dump: ValueError: line[3]: {line[3]!r}")
+                manifest["versionCode"] = 0
     return manifest
 
 
