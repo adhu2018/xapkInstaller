@@ -1,4 +1,4 @@
 AxmlParserPY==0.0.2
-defusedxml==0.7.0
-chardet==4.0.0
-PyYAML==5.4.1
+defusedxml
+chardet
+PyYAML
