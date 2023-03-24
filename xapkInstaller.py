@@ -472,7 +472,7 @@ def install_apk(device: Device, file: str, del_path: List[str], root: str, abc: 
     name_suffix: str = os.path.split(file)[1]
     manifest = dump(name_suffix, del_path)
     log.info(manifest)
-    checkVersion(device, manifest["package_name"], int(manifest["versionCode"], manifest["native_code"]))
+    checkVersion(device, manifest["package_name"], int(manifest["versionCode"]), manifest["native_code"])
     check_by_manifest(device, manifest)
 
     install = ["install", abc, name_suffix]
