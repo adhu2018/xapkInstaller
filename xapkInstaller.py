@@ -482,8 +482,11 @@ def install_apk(device: Device, file: str, del_path: List[str], root: str, abc: 
     install = ["install", abc, name_suffix]
     run, msg = device.adb(install)
     if run.returncode:
-        if abc == "-rtd" and "argument expected" in msg:
-            log.error('No argument expected after "-rtd"')
+        if abc == "-rtd":
+            if "argument expected" in msg:
+                log.error('No argument expected after "-rtd"')
+            else:  # WSA
+                log.error(f'{msg!r}')
             log.info("正在修改安装参数重新安装，请等待...")
             return install_apk(device, file, del_path, root, "-r")
         elif abc == "-r":
