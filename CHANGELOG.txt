@@ -1,3 +1,6 @@
+0.23.032410
+修复 install_apk，checkVersion，dump
+优化 使用 python 3.11
 0.23.020318
 新增 check_sth
 新增 install_apks_java,install_apks_py, install_apks_sai, install_multiple
