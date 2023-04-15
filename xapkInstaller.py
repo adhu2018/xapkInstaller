@@ -257,7 +257,7 @@ def check(ADB=None) -> List[str]:
     if run.returncode:
         log.error(msg)
     elif len(devices) == 0:
-        log.error("安装失败：手机未连接电脑！")
+        log.error("手机未连接电脑！")
     elif len(devices) == 1:
         pass
     elif len(devices) > 1:
