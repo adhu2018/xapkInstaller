@@ -2,6 +2,7 @@
 
 ### 简介
 
+## 虽非开发本意，但项目可能会给APP备案工作带来不利影响，即日起，将停止项目相关一切活动。 ##  
 小米安装xapk需要关闭MIUI优化，但是这样会导致软件的权限设置被重置，被搞烦了，所以就有了这个。。  
 
 > 推荐：[SAI](https://github.com/Aefyr/SAI) 支持 [Shizuku](https://github.com/RikkaApps/Shizuku) 模式，可以在手机上完成整个安装流程
