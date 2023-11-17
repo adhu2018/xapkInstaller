@@ -729,21 +729,18 @@ def main(root: str, one: str) -> bool:
 
             if os.path.isdir(del_path[-1]) and os.path.exists(os.path.join(del_path[-1], "manifest.json")):
                 os.chdir(del_path[-1])
-                install, run = install_xapk(device, del_path[-1], del_path, root)
-                if run.returncode:
-                    print_err(tostr(run.stderr))
-                    try:
-                        log.info("使用备用方案")
-                        run = install_base(device, install[5:])[1]
-                        if not run.returncode:
-                            return True
-                    except Exception:
-                        log.exception("Failed in main->install_base.")
+                install, status = install_xapk(device, del_path[-1], del_path, root)
+                if status:
                     if input("安装失败！将尝试保留数据卸载重装，可能需要较多时间，是否继续？(y/N)").lower() == "y":
                         package_name: str = read_json(os.path.join(del_path[-1], "manifest.json"))["package_name"]
                         if uninstall(device, package_name, root):
-                            for i in install:
-                                run, msg = run_msg(i)
+                            if type(install[0][0]) is list:
+                                for i in install:
+                                    run, msg = run_msg(i)
+                                    if run.returncode:
+                                        sys.exit(msg)
+                            else:
+                                run, msg = run_msg(install)
                                 if run.returncode:
                                     sys.exit(msg)
                     else:
