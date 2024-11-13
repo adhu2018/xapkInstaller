@@ -464,7 +464,8 @@ def install_aab(device: Device, file: str, del_path: List[str], root: str) -> Tu
     sign = read_yaml("./config.yaml")
     if sign.get("ks") and sign.get("ks-pass") and sign.get("ks-key-alias") and sign.get("key-pass"):
         for i in sign:
-            build.append(f"--{i}={sign[i]}")
+            if i in ["ks", "ks-pass", "ks-key-alias", "key-pass"]:
+                build.append(f"--{i}={sign[i]}")
     run = run_msg(build)[0]
     if run.returncode:
         sys.exit(info_msg['bundletool'])
