@@ -463,9 +463,10 @@ def install_aab(device: Device, file: str, del_path: List[str], root: str) -> Tu
              "--output="+del_path[-1]]
     sign = read_yaml("./config.yaml")
     if sign.get("ks") and sign.get("ks-pass") and sign.get("ks-key-alias") and sign.get("key-pass"):
-        for i in ["ks", "ks-pass", "ks-key-alias", "key-pass"]:
-            build.append(f"--{i}={sign[i]}")
-    run, msg = run_msg(build)
+        for i in sign:
+            if i in ["ks", "ks-pass", "ks-key-alias", "key-pass"]:
+                build.append(f"--{i}={sign[i]}")
+    run = run_msg(build)[0]
     if run.returncode:
         if "failed to deserialize resources.pb" in msg:
             log.error("请升级bundletool.jar！")
