@@ -322,6 +322,10 @@ def check_by_manifest(device: Device, manifest: dict) -> None:
 
 
 def checkVersion(device: Device, package_name: str, fileVersionCode: int, versionCode: int = -1, abi: str = "") -> None:
+    if type(fileVersionCode) is str:
+        fileVersionCode = int(fileVersionCode)
+    if type(versionCode) is str:
+        versionCode = int(versionCode)
     msg = device.shell(["pm", "dump", package_name])[1]
     for i in msg.split("\n"):
         if "versionCode" in i:
@@ -530,6 +534,7 @@ def install_apkm(device: Device, file: Path, del_path: List[str], root: str) -> 
     zip_file.extract(upfile, del_path[-1])
     info = read_json(os.path.join(del_path[-1], upfile))
     file_list = zip_file.namelist()
+    log.info(file_list)
     if device.sdk < int(info["min_api"]):
         sys.exit(info_msg["sdktoolow"])
     checkVersion(device, info["pname"], info["versioncode"], info["arches"])
