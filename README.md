@@ -4,6 +4,8 @@
 
 小米安装xapk需要关闭MIUI优化，但是这样会导致软件的权限设置被重置，被搞烦了，所以就有了这个。。  
 
+> 推荐：[Termux](https://github.com/termux/termux-app) 可通过 `pkg install android-tools` 安装adb。粗略尝试了一下，可以正常使用本项目
+
 > 推荐：[SAI](https://github.com/Aefyr/SAI) 支持 [Shizuku](https://github.com/RikkaApps/Shizuku) 模式，可以在手机上完成整个安装流程
 
 ### 使用环境
