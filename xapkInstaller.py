@@ -138,6 +138,7 @@ class Device:
             if _sdk:
                 try:
                     self._sdk = int(_sdk)
+                    break
                 except ValueError as err:
                     # 设备断开连接 error: closed
                     sys.exit("设备断开连接")
