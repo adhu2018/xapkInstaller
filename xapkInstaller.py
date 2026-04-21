@@ -484,7 +484,7 @@ def install_aab(device: Device, file: str, del_path: List[Path], root: Path) -> 
     del_path.append(Path(name+".apks").resolve())
     if os.path.exists(del_path[-1]):
         delPath(del_path[-1])
-    build = ["java", "-jar", "bundletool.jar", "build-apks",
+    build = [check_sth("java"), "-jar", check_sth("bundletool"), "build-apks",
              "--connected-device", "--bundle="+name_suffix,
              "--output="+str(del_path[-1])]
     sign = read_yaml("./config.yaml")
@@ -577,7 +577,7 @@ def install_apks(device: Device, file: Path, del_path: List[Path], root: Path) -
 
 def install_apks_java(file: Path) -> Tuple[List[str], bool]:
     name_suffix: str = os.path.split(file)[1]
-    install = ["java", "-jar", "bundletool.jar", "install-apks", "--apks="+name_suffix]
+    install = [check_sth("java"), "-jar", check_sth("bundletool"), "install-apks", "--apks="+name_suffix]
     run, msg = run_msg(install)
     if run.returncode:
         if "[SCREEN_DENSITY]" in msg:
