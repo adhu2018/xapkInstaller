@@ -403,7 +403,11 @@ def delPath(path: Path):
 
 
 def dump(file: Path, del_path: List[Path]) -> dict:
-    run, msg = run_msg(["aapt", "dump", "badging", str(file)])
+    _aapt = check_sth("aapt")
+    if len(_aapt) > 0:
+        run, msg = run_msg([_aapt, "dump", "badging", str(file)])
+    else:
+        return dump_py(file, del_path)
     if msg:
         log.info(msg)
     if run.returncode:
