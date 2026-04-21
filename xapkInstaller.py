@@ -341,7 +341,7 @@ def checkVersion(device: Device, package_name: str, fileVersionCode: int, versio
                     sys.exit("版本一致，用户取消安装。")
         elif "primaryCpuAbi" in i:
             primaryCpuAbi = i.strip().split("=")[1]
-            if (primaryCpuAbi == "arm64-v8a" and abi) and (primaryCpuAbi not in abi):
+            if (primaryCpuAbi == "arm64-v8a" and len(abi) > 0) and (primaryCpuAbi.replace("-", "_") not in abi):
                 if input("警告：从64位变更到32位？请确保文件无误！(y/N)").lower() != "y":
                     sys.exit("用户取消安装。")
 
